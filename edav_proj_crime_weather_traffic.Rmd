@@ -116,7 +116,6 @@ fig3.7
 fig3.8 <- ggplot(violation_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
 fig3.8
 
-
 ```
 For the above and subsequent similar scatter plots, each data point on the graph represented a single day (e.g., total human traffic across all stations for that day, total crimes committed across all stations for that day).  
 

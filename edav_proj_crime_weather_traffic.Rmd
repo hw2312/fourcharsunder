@@ -106,15 +106,15 @@ fig3.3
 fig3.4 <- ggplot(felony_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekend Subway Human Traffic against Felony Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
 fig3.4
 
-fig3.4 <- ggplot(misdemeanor_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Misdemeanor Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
-fig3.4
-fig3.5 <- ggplot(misdemeanor_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Misdemeanor Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.5 <- ggplot(misdemeanor_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Misdemeanor Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
 fig3.5
-
-fig3.6 <- ggplot(violation_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.6 <- ggplot(misdemeanor_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Misdemeanor Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
 fig3.6
-fig3.7 <- ggplot(violation_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+
+fig3.7 <- ggplot(violation_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
 fig3.7
+fig3.8 <- ggplot(violation_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.8
 
 
 ```

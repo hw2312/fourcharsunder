@@ -1,0 +1,327 @@
+---
+title: "edav_proj_crime_weather_traffic"
+author: "sp_lee"
+date: "Apr 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Create bar charts of crime numbers against subway stations, in decreasing order
+
+```{r, echo=TRUE, fig.height=8, fig.width=5}
+library(tidyverse)
+subway_crime <- read_csv("crime/subway_crime_manhattan.csv")
+crime_group_station <- subway_crime %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n())
+crime_group_station_crime_type <- subway_crime %>% group_by(Station_Name_w_Line, LAW_CAT_CD) %>% summarize(crime_count = n())
+crime_group_station_crime_type <- crime_group_station_crime_type %>% arrange(desc(crime_count))
+crime_group_station_felony <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "FELONY")
+crime_group_station_misdemeanor <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+crime_group_station_violation <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "VIOLATION")
+
+fig1.1 <- ggplot(crime_group_station, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + geom_col(fill = "pink") + ggtitle('Crime Count by Manhattan Subway Stations') + coord_flip() + xlab("Subway Station") + ylab("Crime Count")
+fig1.1
+
+fig1.2 <- ggplot(crime_group_station_felony, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + geom_col(fill = "pink") + coord_flip() + ggtitle('Crime Count (Felony) by Manhattan Subway Stations') + xlab("Subway Station") + ylab("Crime Count (Felony)")
+fig1.2
+
+fig1.3 <- ggplot(crime_group_station_misdemeanor, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + geom_col(fill = "pink") + coord_flip() + ggtitle('Crime Count (Misdemeanor) by Manhattan Subway Stations') + xlab("Subway Station") + ylab("Crime Count (Misdemeanor)")
+fig1.3
+
+fig1.4 <- ggplot(crime_group_station_violation, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + geom_col(fill = "pink") + coord_flip() + ggtitle('Crime Count (Violation) by Manhattan Subway Stations') + xlab("Subway Station") + ylab("Crime Count (Violation)")
+fig1.4
+
+#Select top 5 stations 
+top_crime_stations <- crime_group_station %>% arrange(desc(crime_count)) %>% head(5)
+top_felony_stations <- crime_group_station_felony %>% arrange(desc(crime_count)) %>% head(5)
+top_misdemeanor_stations <-crime_group_station_misdemeanor %>% arrange(desc(crime_count)) %>% head(5)
+top_violation_stations <- crime_group_station_violation %>% arrange(desc(crime_count)) %>% head(5)
+top_crime_stations
+top_felony_stations
+top_misdemeanor_stations
+top_violation_stations
+```
+By looking at these bar charts and also at the tables of top 5s, we see that the crime count by station for the 3 different crime types were closely related.  For example, 125 ST (line 4, 5, 6) and 23 ST were in the top 5 for all 3 types of crime.  We see that the similarity between misdemeanor and violation was strongest among the 3 possible pairings of crime type (i.e., felony-misdemeanor, felony-voilation, misdemeanor-violation).  In a way, this was not surprising because misdemeanor and violation are more similar than felony which is a a more serious type of crime.
+
+```{r, echo=FALSE}
+crime_group_station_time_interval <- subway_crime %>% group_by(Station_Name_w_Line, hour_interval) %>% summarize(crime_count = n())
+crime_group_station_crime_type_time_interval <- subway_crime %>% group_by(Station_Name_w_Line, hour_interval, LAW_CAT_CD) %>% summarize(crime_count = n())
+
+time_levels = c("0000-0400", "0400-0800", "0800-1200", "1200-1600", "1600-2000", "2000-0000")
+
+crime_group_station_time_interval$hour_interval <- factor(crime_group_station_time_interval$hour_interval, levels = time_levels)
+
+crime_group_station_crime_type_time_interval$hour_interval <- factor(crime_group_station_crime_type_time_interval$hour_interval, levels = time_levels)
+
+crime_group_station_felony_time_interval <- crime_group_station_crime_type_time_interval%>% filter(LAW_CAT_CD == "FELONY")
+crime_group_station_misdemeanor_time_interval <- crime_group_station_crime_type_time_interval%>% filter(LAW_CAT_CD == "MISDEMEANOR")
+crime_group_station_violation_time_interval <- crime_group_station_crime_type_time_interval%>% filter(LAW_CAT_CD == "VIOLATION")
+
+fig2.1 <- ggplot(crime_group_station_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + ggtitle('Crime Count by Time Period of the Day') + xlab("Time Interval") + ylab("Crime Count")
+fig2.1
+fig2.2 <- ggplot(crime_group_station_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + ggtitle('Crime Count by Time Period of the Day') + xlab("Time Interval") + ylab("Crime Count") + geom_text(label=crime_group_station_time_interval$Station_Name_w_Line, check_overlap = TRUE, nudge_x=0.2, nudge_y=-0.3) 
+fig2.2
+fig2.3 <- ggplot(crime_group_station_felony_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + ggtitle('Crime Count (Felony) by Time Period of the Day') + xlab("Time Interval") + ylab("Crime Count")
+fig2.3
+fig2.4 <- ggplot(crime_group_station_misdemeanor_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + ggtitle('Crime Count (Misdemeanor) by Time Period of the Day') + xlab("Time Interval") + ylab("Crime Count")
+fig2.4
+fig2.5 <- ggplot(crime_group_station_violation_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + ggtitle('Crime Count (Violation) by Time Period of the Day') + xlab("Time Interval") + ylab("Crime Count")
+fig2.5
+```
+
+For overall crime count, the median was rather consistent across the time periods.  The number of crimes committed was highest from 1600-2000hr, which coincided with the evening peak period.  Based on that, we expected the morning peak (0800-1200hr) to display the next highest crime count, but the data did not support that.  Instead, 1200-1600hr showed the second highest crime count based on median.  Also, variance (as indicated by length of the box) was highest for the time periods with the highest median crime count. The patterns we saw in the overall count were similarly visible for felony and misdemeanor.  For violation, the only similarity with the other crime types was that 1600-200hr was the period with the highest crime rate.
+
+```{r, echo=FALSE}
+crime_count_date <- subway_crime %>% group_by(CMPLNT_FR_DT) %>% summarize(crime_count = n())
+crime_type_count_date <- subway_crime %>% group_by(CMPLNT_FR_DT, LAW_CAT_CD) %>% summarize(crime_count = n())
+
+subway_traffic <- read_csv("data/2015_manhattan_turnstile_usage2.csv")
+subway_total_traffic <- subway_traffic %>% mutate(total_vol = entry_volume + exit_volume)
+subway_total_traffic_wkday <- subway_total_traffic %>% filter(day_of_week %in% c(0, 1, 2, 3, 4) & is_holiday == "False")
+subway_total_traffic_wkend <- subway_total_traffic %>% filter(day_of_week %in% c(5, 6) | is_holiday == "True")
+subway_total_traffic_wkday_day <- subway_total_traffic_wkday %>% group_by(date) %>% summarize(traffic = sum(total_vol))
+subway_total_traffic_wkend_day <- subway_total_traffic_wkend %>% group_by(date) %>% summarize(traffic = sum(total_vol))
+
+crime_count_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_count_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_type_count_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, crime_type_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_type_count_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, crime_type_count_date, c("date" = "CMPLNT_FR_DT"))
+
+felony_count_traffic_wkday <- crime_type_count_traffic_wkday %>% filter(LAW_CAT_CD == "FELONY")
+misdemeanor_count_traffic_wkday <- crime_type_count_traffic_wkday %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+violation_count_traffic_wkday <- crime_type_count_traffic_wkday %>% filter(LAW_CAT_CD == "VIOLATION")
+felony_count_traffic_wkend <- crime_type_count_traffic_wkend %>% filter(LAW_CAT_CD == "FELONY")
+misdemeanor_count_traffic_wkend <- crime_type_count_traffic_wkend %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+violation_count_traffic_wkend <- crime_type_count_traffic_wkend %>% filter(LAW_CAT_CD == "VIOLATION")
+
+fig3.1 <- ggplot(crime_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Crime Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.1
+fig3.2 <- ggplot(crime_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekend Subway Human Traffic against Crime Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.2
+
+fig3.3 <- ggplot(felony_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Felony Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.3
+fig3.4 <- ggplot(felony_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekend Subway Human Traffic against Felony Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.4
+
+fig3.4 <- ggplot(misdemeanor_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Misdemeanor Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.4
+fig3.5 <- ggplot(misdemeanor_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Misdemeanor Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.5
+
+fig3.6 <- ggplot(violation_count_traffic_wkday, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.6
+fig3.7 <- ggplot(violation_count_traffic_wkend, aes(x = crime_count, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Violation Count - 1 point = one day') + xlab("Crime Count") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig3.7
+
+
+```
+For the above and subsequent similar scatter plots, each data point on the graph represented a single day (e.g., total human traffic across all stations for that day, total crimes committed across all stations for that day).  
+
+We created the above scatter plots to investigate if there was a relationship between human traffic and crime rate at subway stations.
+
+We plotted the charts separately by weekday and weekend to isolate any effects that weekday vs weekend might have on the relationship between human traffic count and crime count.
+
+Overall, there was a positive correlation between human traffic and crime count for both weekday and weekend.  A similar pattern was observed for felony and misdemeanor.  However, the relationship was less obvious for violation for which the sample sizes were small.
+
+```{r, echo=FALSE}
+subway_total_traffic_wkday_day
+subway_total_traffic_wkend_day
+rainfall <- read_csv("weather/precipitation.csv")
+rainfall_day <- rainfall %>% group_by(date) %>% summarize(total_rainfall = sum(total_precip))
+
+rainfall_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, rainfall_day)
+rainfall_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, rainfall_day)
+
+rainfall_traffic_wkday
+rainfall_traffic_wkend
+
+fig4.1 <- ggplot(rainfall_traffic_wkday, aes(x = total_rainfall, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig4.1
+fig4.2 <- ggplot(rainfall_traffic_wkend, aes(x = total_rainfall, y = traffic)) + geom_point(color='blue') + ggtitle('Weekend Subway Human Traffic against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
+fig4.2
+
+```
+The above scatter plots investigated if there was a relationship between rainfall and human traffic at subway stations.
+
+For weekdays, we saw that human traffic was not much influenced by rainfall, which was not surprising because everyone had to go to work/school regardless of whether or not it was raining.   For weekends, we saw a stronger negative relationship between rainfall and human traffic, which made sense because people might cancel their outdoor activities or leisure travelling plans depending on the weather. 
+
+We also saw that most of the data points were clustered around the y-axis, which was due to the fact that on most days there were no rain.
+
+```{r, echo=FALSE}
+crime_count_date
+crime_type_count_date
+
+rainfall_day
+
+rainfall_wkday <- rainfall_traffic_wkday %>% select(date, total_rainfall)
+rainfall_wkend <- rainfall_traffic_wkend %>% select(date, total_rainfall)
+
+crime_rainfall <- inner_join(rainfall_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_rainfall
+
+crime_type_count_date
+
+felony_count_date <- crime_type_count_date %>% filter(LAW_CAT_CD == "FELONY")
+misdemeanor_count_date <- crime_type_count_date %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+violation_count_date <- crime_type_count_date %>% filter(LAW_CAT_CD == "VIOLATION")
+
+felony_rainfall <- inner_join(rainfall_day, felony_count_date, c("date" = "CMPLNT_FR_DT"))
+misdemeanor_rainfall <- inner_join(rainfall_day, misdemeanor_count_date, c("date" = "CMPLNT_FR_DT"))
+violation_rainfall <- inner_join(rainfall_day, violation_count_date, c("date" = "CMPLNT_FR_DT"))
+
+crime_rainfall_wkend <- inner_join(rainfall_wkend, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+
+fig5.1 <- ggplot(crime_rainfall, aes(x = total_rainfall, y = crime_count)) + geom_point(color='blue') + ggtitle('Crime Count against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig5.1
+
+fig5.2 <- ggplot(felony_rainfall, aes(x = total_rainfall, y = crime_count)) + geom_point(color='blue') + ggtitle('Felony Count against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig5.2
+
+fig5.3 <- ggplot(misdemeanor_rainfall, aes(x = total_rainfall, y = crime_count)) + geom_point(color='blue') + ggtitle('Misdemeanor Count against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig5.3
+
+fig5.4 <- ggplot(violation_rainfall, aes(x = total_rainfall, y = crime_count)) + geom_point(color='blue') + ggtitle('Violation Count against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig5.4
+
+fig5.5 <- ggplot(crime_rainfall_wkend, aes(x = total_rainfall, y = crime_count)) + geom_point(color='blue') + ggtitle('Weekend Crime Count against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig5.5
+
+```
+The above scatter plots investigated if there was a relationship between crime rate and rainfall at subway stations.
+
+There did not seem to be a strong relationship between overall crime count and rainfall but we did notice that on days with heavy rain, crime count was never high, especially when we drilled down to look at misdemenor and violations.  One explanation would be that heavy rainfall might have deterred potential offenders from travelling to the subway stations.   
+
+However, we noticed that this was not true for felony.  High counts of felony were observed even for days with heavy rain, suggesting that felony was less dependent on the weather.
+
+Previously, we saw that subway human traffic was sensitive to rainfall on weekends but not so much on weekdays.  Therefore, we wondered if crime count would likewise be more sensitive to rainfall on weekends.  Based on visual inspection, it did not seem like weekend changed the relationship between crime rate and rainfall.  
+
+```{r, echo=FALSE}
+wkday <- subway_total_traffic %>% filter(day_of_week %in% c(0, 1, 2, 3, 4) & is_holiday == "False") %>% select(date)
+wkend <- subway_total_traffic %>% filter(day_of_week %in% c(5, 6) | is_holiday == "True") %>% select(date)
+subway_crime_wkday <- right_join(subway_crime, wkday, c("CMPLNT_FR_DT" = "date"))
+subway_crime_wkend <- right_join(subway_crime, wkend, c("CMPLNT_FR_DT" = "date"))
+crime_group_station_wkday <- subway_crime_wkday %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n())
+crime_group_station_wkend <- subway_crime_wkend %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n())
+
+station_total_traffic <- subway_total_traffic %>% group_by(Station_Name_w_Line) %>% summarise(total_traffic = sum(total_vol))
+station_total_traffic_wkday <- subway_total_traffic_wkday %>% group_by(Station_Name_w_Line) %>% summarise(total_traffic = sum(total_vol))
+station_total_traffic_wkend <- subway_total_traffic_wkend %>% group_by(Station_Name_w_Line) %>% summarise(total_traffic = sum(total_vol))
+
+station_traffic_crime <- inner_join(station_total_traffic, crime_group_station)
+
+station_traffic_crime_wkday <- inner_join(station_total_traffic_wkday, crime_group_station_wkday)
+station_traffic_crime_wkend <- inner_join(station_total_traffic, crime_group_station_wkend)
+
+fig6.1 <- ggplot(station_traffic_crime, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Crime Count against Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig6.1
+fig6.2 <- ggplot(station_traffic_crime_wkday, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Crime Count against Weekday Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig6.2
+fig6.3 <- ggplot(station_traffic_crime_wkend, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Crime Count against Weekend Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig6.3
+fig6.4 <- ggplot(station_traffic_crime_wkend, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Crime Count against Weekend Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red") + geom_text(label=station_traffic_crime_wkend$Station_Name_w_Line, check_overlap = TRUE, nudge_y = 0.2) 
+fig6.4
+
+station_traffic_felony <- inner_join(station_total_traffic, crime_group_station_felony)
+station_traffic_misdemeanor <- inner_join(station_total_traffic, crime_group_station_misdemeanor)
+station_traffic_violation <- inner_join(station_total_traffic, crime_group_station_violation)
+
+fig6.5 <- ggplot(station_traffic_felony, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Felony Count against Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig6.5
+fig6.6 <- ggplot(station_traffic_misdemeanor, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Misdemeanor Count against Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig6.6
+fig6.7 <- ggplot(station_traffic_violation, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + ggtitle('Violation Count against Human Traffic - 1 point = one station') + xlab("Human Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig6.7
+
+```
+
+In the previous set of scatter plots, we were using each point to represent a day aggregating across all subway stations.  For this set of scatter plts, we instead aggregated across time and let each point represent a unique subway station.  The focus here was to investigate if a subway station with higher traffic also suffered from higher crime rate.  
+
+We noticed a general trend of higher crime count for stations with higher human traffic, and this was true regardless of weekday or weekend, or crime type.  There were two outliers with lower traffic but very high crime count (23 ST on line 6 and 125 ST on line 4, 5 & 6), which meant that for these two stations, their higher crime rate could not be well explained by human traffic alone.  Other factors affecting crime rate could be whether or not that neighborhood tended to have higher crime rate.  Also, lower traffic could also work in the reverse, as a station that is more isolated may attract more potential offenders, since their crimes could be more easily committed unseen.
+
+```{r, echo=FALSE}
+fig7.1 <- ggplot(crime_count_date, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + ggtitle("Crime Count across Time") + xlab("Time") + ylab("Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.1
+
+wkday <- unique(wkday)
+wkend <- unique(wkend)
+crime_count_date_wkday <- right_join(crime_count_date, wkday, c("CMPLNT_FR_DT" = "date"))
+crime_count_date_wkend <- right_join(crime_count_date, wkend, c("CMPLNT_FR_DT" = "date"))
+
+fig7.2 <- ggplot(crime_count_date_wkday, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + ggtitle("Crime Count across Time (Weekdays)") + xlab("Time") + ylab("Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.2
+
+fig7.3 <- ggplot(crime_count_date_wkend, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + ggtitle("Crime Count across Time (Weekends)") + xlab("Time") + ylab("Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.3
+
+fig7.4 <- ggplot(crime_type_count_date, aes(CMPLNT_FR_DT, y=crime_count, color=LAW_CAT_CD, group=LAW_CAT_CD)) + geom_line() + ggtitle("Crime Count across Time") + xlab("Time") + ylab("Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.4
+
+top_crime_stations_list <- top_crime_stations$Station_Name_w_Line
+subway_crime_top_5 <- subway_crime %>% filter(Station_Name_w_Line  %in% top_crime_stations_list)
+
+top_stations_crime_count_date <- subway_crime_top_5 %>% group_by(CMPLNT_FR_DT) %>% summarize(crime_count = n())
+top_stations_crime_type_count_date <- subway_crime_top_5 %>% group_by(CMPLNT_FR_DT, LAW_CAT_CD) %>% summarize(crime_count = n())
+fig7.5 <- ggplot(top_stations_crime_count_date, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + ggtitle("Crime Count across Time for Top 5 Stations") + xlab("Time") + ylab("Crime Count") +  geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.5
+
+fig7.6 <- ggplot(top_stations_crime_type_count_date, aes(CMPLNT_FR_DT, y=crime_count, color=LAW_CAT_CD, group=LAW_CAT_CD)) + geom_line() + ggtitle("Crime Count across Time for Top 5 Stations") + xlab("Time") + ylab("Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.6
+
+fig7.7 <- ggplot(subway_total_traffic_wkday_day, aes(date, y=traffic)) + geom_line() + ggtitle("Subway Human Traffic across Time (Weekdays)") + xlab("Time") + ylab("Human Traffic") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.7
+
+fig7.8 <- ggplot(subway_total_traffic_wkend_day, aes(date, y=traffic)) + geom_line() + ggtitle("Subway Human Traffic across Time (Weekends)") + xlab("Time") + ylab("Human Traffic") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.8
+
+subway_total_traffic_day <- subway_total_traffic %>% group_by(date) %>% summarize(traffic = sum(total_vol))
+
+crime_count_traffic_day <- inner_join(subway_total_traffic_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_count_rainfall_day <- inner_join(rainfall_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+traffic_rainfall_day <- inner_join(subway_total_traffic_day, rainfall_day)
+
+# Note: for apply function, "2" indicates an operation on col, while 1 indicates an op on row
+crime_count_traffic_day_std <- apply(select(crime_count_traffic_day, -date), 2, function(x) 100 * x / x[1])
+crime_count_traffic_day_std <- data.frame(crime_count_traffic_day_std)
+
+crime_count_traffic_day_std <- cbind(date = crime_count_traffic_day$date, crime_count_traffic_day_std)
+crime_count_traffic_day_std_tidy <- gather(crime_count_traffic_day_std, key = param, value = value, -date)
+
+fig7.9 <- ggplot(crime_count_traffic_day_std_tidy, aes(date, y=value, color=param, group=param)) + geom_line() + ggtitle("Human Traffic & Crime Count across Time") + xlab("Time") + ylab("Human Traffic, Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.9
+
+crime_count_rainfall_day_std <- apply(select(crime_count_rainfall_day, -date), 2, function(x) 100 * (x+0.01) / (x[1]+0.01))
+crime_count_rainfall_day_std <- data.frame(crime_count_rainfall_day_std)
+
+crime_count_rainfall_day_std <- cbind(date = crime_count_rainfall_day$date, crime_count_rainfall_day_std)
+crime_count_rainfall_day_std_tidy <- gather(crime_count_rainfall_day_std, key = param, value = value, -date)
+
+fig7.10 <- ggplot(crime_count_rainfall_day_std_tidy, aes(date, y=value, color=param, group=param)) + geom_line() + ggtitle("Crime Count & Rainfall across Time") + xlab("Time") + ylab("Crime Count, Rainfall") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.10
+
+traffic_rainfall_day_std <- apply(select(traffic_rainfall_day, -date), 2, function(x) 100 * (x+0.01) / (x[1]+0.01))
+traffic_rainfall_day_std <- data.frame(traffic_rainfall_day_std)
+
+traffic_rainfall_day_std <- cbind(date = traffic_rainfall_day$date, traffic_rainfall_day_std)
+traffic_rainfall_day_std_tidy <- gather(traffic_rainfall_day_std, key = param, value = value, -date)
+
+fig7.11 <- ggplot(traffic_rainfall_day_std_tidy, aes(date, y=value, color=param, group=param)) + geom_line() + ggtitle("Human Traffic & Rainfall across Time") + xlab("Time") + ylab("Human Traffic, Rainfall") + geom_smooth(method = "loess", span = .5, se = FALSE)
+fig7.11
+
+
+```
+The above set of time series was meant to explore the trend of crime across time and also to see if it varied in the same direction as the other parameters of human traffic and rainfall.  
+
+Firstly, we could see large fluctuations in crime count across time.  This would not be caused by intra-day patterns because we were already looking at total crime count per day.  Therefore, we looked at the crime count across time only for weekdays and then only for weekends, but the fluctations remained.  It was clear that there were other factors influencing crime count not reflected in our analysis.  
+
+Ignoring the  noise, it seemed like crime rate was lower near the start and end of the year with two prominent peaks between Apr and Jun.
+
+Then, we looked at crime count by crime type.  The picture was even less clear, with the more fluctuations dominanting the graph.
+
+In an attempt to isolate the noise, we looked at the crime count for just the top 5 stations (in terms of highest crime rate).  The peaks between Apr and Jun were still there but there was now a new higher peak in Nov which was not visible previously in the overall chart.  The same peak could be observed when we looked at crime rate by type.
+
+Next, we looked at human traffic and crime count across time and there seemed to be a positive correlation.  This matched our earlier observation with scatter plots. 
+
+We further tried to look at rainfall with human traffic, and rainfall with crime rate, but these two graphs were dominated by large fluctuations in rainfall and were not informative.  It was clear to us that scatter plot offered a better way to visualize relationship between different variables especially if we did not believe that time was a major influencing factor for two parameters (e.g., crime and rainfall) in the same way. 

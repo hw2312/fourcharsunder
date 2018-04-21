@@ -9,12 +9,15 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE,
                       message = FALSE)
 ```
 
-### 4. Main Analysis (Exploratory Data Analysis)
+
+## 4. Main Analysis (Exploratory Data Analysis)
+
 The topic of interest is NYC subway, specifically Manhattan.  There were questions on NYC subway that we wanted to find answers for, such as which time period was the busiest, which stations were the busiest, difference in human traffic patterns between weekdays and  weekends.   Then, there were other questions  related to NYC subway that we wanted to explore, e.g., which station had the highest crime rate, whether or not weather (rainfall) affected subway travelling patterns, and correlation (positve or negative) between taxi  and subway usage.
 
 Therefore, we have four main groups of data: NYC subway turnstile counter readings, crime data, weather data and taxi data.
 
 We start by exploring subway turnstile data on its own, before we move on to looking at its relationships with other variables that we are interested in (i.e., crime, weather, taxi).
+
 
 ### 4.1 Static illustration of turnstile data
 
@@ -23,6 +26,7 @@ library(tidyverse)
 # read data
 turnstile = read.csv("data/2015_manhattan_turnstile_usage.csv")
 ```
+
 
 #### 4.1.1 Average by day of week
 
@@ -43,11 +47,15 @@ ggplot(data1, aes(y = avg_entry, x = interval)) +
 ggplot(data1, aes(y = avg_exit, x = interval)) + 
   geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
 ```
+
+
 * First of all, we would see how the average number of entry & exit changes over time of a day, faceted by day of week. Variables, "day" & "interval", are releveled by the order of time so that we can easily catch the trend along with time.
 * The main feature detected through following plots is that the peak time for entry is between "4pm - 8pm" and the peak time for exit is between "8am - 12pm".
 * The insights we can get from that feature is that people are coming into Manhattan from outside of Manhattan between "8am - 12pm", which is the peak time of exit. Also, lots of people are going out from Manhattan  between "4pm - 8pm", which is the peak time of entry.
 
+
 #### 4.1.2 The effect of weekday & weekend
+
 * In the second part of static analysis of subway data, we are exploring to see how the trend of subway usage changes by weekday and weekend. 
 * In 2-1, we are looking at the general trend of subway entry & exit over a week. Then, in 2-2, we will see the difference between weekday and weekend. 
 
@@ -69,10 +77,13 @@ ggplot(data2_1, aes(y = avg_entry, x = interval)) +
 ggplot(data2_1, aes(y = avg_exit, x = interval)) + 
   geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval")  + coord_flip()
 ```
+
 * To see the subway usage trend over a week, we grouped data by interval without considering day of week and averaged count of entry and exit by corresponding interval of time. Again, to see the changes in entry and exit over time, we releveled variable "interval" in an order of time.
 * As we saw in part 1, the peak time for exit is between "8am - 12pm" and the peak time for the entry is between "4pm - 8pm" and the entry, which correnspond to the time people coming into Manhattan for their work and going back to home ater work.
 
+
 #### 4.1.2-2 Average by weekday vs weekend & holiday
+
 * We further explore our data to see the difference in trend of using subway on Weekdays and Weekends.
 * For variable "day", value of "Monday - Friday" were substituted with "Weekday", given it's not a holiday. If it is a holiday, "Saturday" or "Sunday", then we substituted it with "Weekend".
 * We grouped data by "Weekday" and "Weekend" to caculate the average number of entry and exit over interval.
@@ -115,7 +126,9 @@ ggplot(data2_2, aes(y = avg_exit, x = interval)) +
 * For the second observation, trends in subway usage is changing from weekdays to weekends. As we observed in the previous parts, peak time for subway exit and enty is corresponding to the time people going to work and coming back home. However, during the weekend, there is no such trends anymore. The peak time for both entry and exit is between "12pm - 4pm". It is possibly because that people are not going to their work during weekends and the pattern from people who are commuting from outside of Manhattan is less reflected on data for weekend tims.
 * There is another interesting observation from the exit graph. During weekdays, there are lots of people exiting subway between "4am - 8am" but much less number of people are exiting subway during weekend around that time. This is possibly because that there are lots of people going to the office in early morning during weekdays.
 
+
 #### 4.1.3 Average by station & interval
+
 * For people who are stranger in Manhattan and hate crowed place, we've have the top 5 crowed stations that you should avoid in terms of exit and entry.
 
 
@@ -145,7 +158,10 @@ data3 %>%
 * Note that there are two Grand central stations in above graph. Since when we are preprocessing the subway data with longitude and latitude information, we gave the unique station id for entrances that are one or more blocks away.
 * Even though the counts for Grand Central station is seperated into parts, it is ranked as the most crowed station.
 
+
+
 ### 4.2 Static illustration of crime, weather (rainfall) and subway traffic data
+
 Now that we have looked at subway human traffic data on its own, we move on to explore its relationship with crime (those committed in subway stations) and weather (rainfall).
 
 First, we look at which subway stations are the most "dangerous" (!) and which are the safest.
@@ -208,6 +224,7 @@ fig1.8
 By looking at these bar charts displaying the top 5 stations in terms of crime count, we see that the crime count by station for the 3 different crime types were closely related.  For example, 125 ST (line 4, 5, 6) and 23 ST were in the top 5 for all 3 types of crime.  We see that the similarity between misdemeanor and violation was strongest among the 3 possible pairings of crime type (i.e., felony-misdemeanor, felony-voilation, misdemeanor-violation).  In a way, this was not surprising because misdemeanor and violation are more similar than felony which is a more serious type of crime.
 
 Out of interest, we also looked at the 10 "safest" stations.  The patterns are a little harder to infer compared with the most dangerous stations because there are many ties.  Some interesting observations include: wall street station is one of the safest, whether we are looking at felony or misdemeanor.  And Columbia on 116th street is also one of the safest for misdemeanor! 
+
 
 #### 4.2.2 Box plots of crime numbers by time of the day
 
@@ -298,21 +315,17 @@ We plotted the charts separately by weekday and weekend to isolate any effects t
 
 Overall, there was a positive correlation between human traffic and crime count for both weekday and weekend.  A similar pattern was observed for felony and misdemeanor.  However, the relationship was less obvious for violation for which the sample sizes were small.
 
+
 #### 4.2.3-2 Scatter plots of Subway Human Traffic against Rainfall (by weekend, weekday)
 
 **One data point = one day of the year**
 
 ```{r, echo=FALSE}
-subway_total_traffic_wkday_day
-subway_total_traffic_wkend_day
 rainfall <- read_csv("weather/precipitation.csv")
 rainfall_day <- rainfall %>% group_by(date) %>% summarize(total_rainfall = sum(total_precip))
 
 rainfall_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, rainfall_day)
 rainfall_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, rainfall_day)
-
-rainfall_traffic_wkday
-rainfall_traffic_wkend
 
 fig4.1 <- ggplot(rainfall_traffic_wkday, aes(x = total_rainfall, y = traffic)) + geom_point(color='blue') + ggtitle('Weekday Subway Human Traffic against Rainfall - 1 point = one day') + xlab("Rainfall") + ylab("Human Traffic Count") + stat_smooth(method = "lm", col = "red")
 fig4.1
@@ -328,23 +341,16 @@ For weekdays, we saw that human traffic was not much influenced by rainfall, whi
 
 We also saw that most of the data points were clustered around the y-axis, which was due to the fact that on most days there were no rain.
 
+
 #### 4.2.3-3 Scatter plots of Crime Count against Rainfall (by crime type)
 
 **One data point = one day of the year**
 
 ```{r, echo=FALSE}
-crime_count_date
-crime_type_count_date
-
-rainfall_day
-
 rainfall_wkday <- rainfall_traffic_wkday %>% select(date, total_rainfall)
 rainfall_wkend <- rainfall_traffic_wkend %>% select(date, total_rainfall)
 
 crime_rainfall <- inner_join(rainfall_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
-crime_rainfall
-
-crime_type_count_date
 
 felony_count_date <- crime_type_count_date %>% filter(LAW_CAT_CD == "FELONY")
 misdemeanor_count_date <- crime_type_count_date %>% filter(LAW_CAT_CD == "MISDEMEANOR")
@@ -381,6 +387,7 @@ There did not seem to be a strong relationship between overall crime count and r
 However, we noticed that this was not true for felony.  High counts of felony were observed even for days with heavy rain, suggesting that felony was less dependent on the weather.
 
 Previously, we saw that subway human traffic was sensitive to rainfall on weekends but not so much on weekdays.  Therefore, we wondered if crime count would likewise be more sensitive to rainfall on weekends.  Based on visual inspection, it did not seem like weekend changed the relationship between crime rate and rainfall.  
+
 
 #### 4.2.4 Scatter plots of Crime Count against Subway Human Traffic (by crime type; by weekend, weekday)
 
@@ -428,6 +435,7 @@ fig6.7
 In the previous set of scatter plots, we were using each point to represent a day aggregating across all subway stations.  For this set of scatter plts, we instead aggregated across time and let each point represent a unique subway station.  The focus here was to investigate if a subway station with higher traffic also suffered from higher crime rate.  
 
 We noticed a general trend of higher crime count for stations with higher human traffic, and this was true regardless of weekday or weekend, or crime type.  There were two outliers with lower traffic but very high crime count (23 ST on line 6 and 125 ST on line 4, 5 & 6), which meant that for these two stations, their higher crime rate could not be well explained by human traffic alone.  Other factors affecting crime rate could be whether or not that neighborhood tended to have higher crime rate.  Also, lower traffic could also work in the reverse, as a station that is more isolated may attract more potential offenders, since their crimes could be more easily committed unseen.
+
 
 #### 4.2.5 Time Series of Crime Count across time; superimposed with Subway Human Traffic, Rainfall
 
@@ -519,9 +527,10 @@ Next, we looked at human traffic and crime count across time and there seemed to
 We further tried to look at rainfall with human traffic, and rainfall with crime rate, but these two graphs were dominated by large fluctuations in rainfall and were not informative.  It was clear to us that scatter plot offered a better way to visualize relationship between different variables especially if we did not believe that time was a major influencing factor for two parameters (e.g., crime and rainfall) in the same way. 
 
 
-### 5. Data Pre-processing process - description of data and analysis of data quality
+## 5. Data Pre-processing process - description of data and analysis of data quality
 
-## 5.2 Crime Data
+### 5.2 Crime Data
+
 Crime data was collected from the following website provided by the city of New York:
 https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i
 
@@ -532,29 +541,36 @@ https://github.com/hw2312/fourcharsunder/blob/master/crime/crime.ipynb
 
 Below provides a summary:
 
-### 5.2.1 Extracting only the relevant rows - 2015 data, Crime in Subway Stations, Manhattan Stations
+
+#### 5.2.1 Extracting only the relevant rows - 2015 data, Crime in Subway Stations, Manhattan Stations
+
 As the most recent taxi data was for year 2015, we used the year 2015 for crime data to be consistent.   After filtering for only 2015 data, the crime dataset was reduced to 477,031 rows.  
 
 We then filtered the data to include only the crimes committed at subway stations.  This further reduced the number or rows down to 11,228.
 
 Lastly, we filtered for only the stations in Manhattan.  This reduced the number of rows down to 5,367.
 
-### 5.2.2 Include time window and date/time conversion
+#### 5.2.2 Include time window and date/time conversion
+
 As the date and time of the data set was in string type, we had to convert it to date and time format in order to filter the data by date and time.  Regarding time, subway human traffic data was organized in 4 hourly interval.  To facilitate analysis of crime data with subway human traffic data, we inserted an additional column in this crime dataset to indicate which 4 hourly  window the crime was commmited in.
 
-### 5.2.3 Remove rows with null lat /long
+#### 5.2.3 Remove rows with null lat /long
+
 The crime dataset on its own did not indicate in which subway station the crimes were committed.  Therefore, we wrote a program that assigned a crime location to the closest subway station based on distance calculated using lat/long difference.
 
 For this purpose, it was therefore important that the data had lat/long entries.  However, 170 of the filtered records had null for lat/long.  We removed these records from our analysis.
 
-### 5.2.4 Drop columns
+#### 5.2.4 Drop columns
+
 As earlier mentioned, there were 24 columns in the dataset.  Many of these columns were not necessary for our analysis.  For instance, we did not need to know the date and time at which the crime was reported.  We were interested in the date/time at which the crime was *committed* and this information was available in the dataset.  We were also not interested in the codes used for each crime type which were for the police department's internal reference.  We were interested in the type of crime expressed in a language familiar to the lay person.  For that, the dataset conveniently included a column to indicate which of 3 categories the crime committed was in: felony, misdemeanor, violation.  There were also other columns giving a detailed description of the crime but for the purpose of faceting and grouping, we felt that these information was too granular and we did not include them.  Lastly, there were also other columns indicating if the crime was committed in a park, which we did not includ as these were also irrelevant for our analysis.  
 
 In the end, we kept 12 columns the highlights of which included: crime commmited date, time, lat/long, crime category.
 
 We added 6 columns, which as earlier mentioned were columns that we engineered to capture in which 4 hourly window the crime was committed, plus in which subway stations (based on the results of our program to estimate the subway stations based on lat/long proximity)  
 
-## 5.3 Weather Data
+
+### 5.3 Weather Data
+
 Weather data was collected from the following website provided by the National Centers for Environmental Information (NOAA):
 https://www.ncdc.noaa.gov/cdo-web/datatools/lcd
 
@@ -571,13 +587,18 @@ https://github.com/hw2312/fourcharsunder/blob/master/weather/weather_new.ipynb
 
 Below provides a summary:
 
-### 5.3.1 Include time window and date/time conversion
+#### 5.3.1 Include time window and date/time conversion
+
 Similar to what we did for crime data, we converted the date and time from string type to date and time format.  Likewise, we inserted an additional column in this weather dataset to indicate which 4 hourly  window the weather recording was made in.
 
-### 5.3.2 Drop columns
+
+#### 5.3.2 Drop columns
+
 As earlier mentioned, there were 90 columns in the dataset and many of these columns were not related to rainfall and necessary for our analysis.  Eventually, this dataset was transformed into one with only 3 columns, all of which were engineered features.  We explain the feature engineering below.
 
-### 5.3.3 Clean up  rainfall readings
+
+#### 5.3.3 Clean up  rainfall readings
+
 There were several columns representing rainfall, but we focused only on the one giving hourly rainfall (i.e., the highest time resolution).  For hourly rainfall, there were readings with 'T' for value instead of a numerical reading.  There were 1,991 such readings.  'T' represented 'trace' meaning a very small amount of rainfall which were too small for the instrument to provide an accurate reading.  For these readings, we replaced them with 0.
 
 There were also 1,761 hourly rainfall readings with a null value.  Likewise, we replaced them with '0'.
@@ -586,12 +607,23 @@ There were hourly readings appended with the character 's' to indicate that thes
 
 Lastly, the hourly rainfall readings were recorded as strings which we could not use for numerical operations.  We converted them to numerical numbers.
 
-### 5.3.4 Aggregate rainfall readings
+Below graphic provides a quick visual snapshot of the original dataset in terms of missing value.
+
+```{r}
+library(extracat)
+raw_weather <- read.csv("weather/weather_data_raw.csv")
+visna(raw_weather, sort = "b")
+```
+
+#### 5.3.4 Aggregate rainfall readings
+
 As consistent with the entire project, we were interested in data up to a 4hourly window resolution.  The hourly rainfall data had to be converted to a similar format to facilitate our analysis.  Therefore, we aggregated the rainfall readings within each 4 hourly window to get the total rainfall measured within that window.
 
 As mentioned earlier, we transformed this weather dataset into 3 columns: they are date, 4hourly time interval and total rainfall (within that 4hourly time interval).
 
+
 ### 5.4 Taxi Data
+
 Taxi data was collected from the following website provided by the city of New York:
 https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u
 
@@ -599,3 +631,6 @@ https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6
 
 Analysis of Data Quality
 The purpose of using 2015 Yellow Trip data was to map pick-up and drop-off locations to the nearest subway stations in Manhattan and visualize behavioral patterns between subway riders and taxi riders. Only 1.7% of the dataset has missing pick-up and drop-off locations. And this dataset contains all taxi trips in 2015, which guarantees no bias. We understand that February data won’t represent the entire dataset, but for simplicity, we excluded seasonality from our analysis.
+
+## 6. Conclusion
+

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>2015 NYC Subway Turnstile Volume</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js'></script>
+		<script src='https://unpkg.com/simple-statistics@5.3.1/dist/simple-statistics.min.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css' rel='stylesheet'/>
+	</head>
+	<style type='text/css'>
+	body {
+	  margin: 0;
+	  padding: 0;
+	  font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
+	}
+	.map-container{
+		position: absolute;
+	  top: 5px;
+	  left: 5px;
+		margin: auto;
+		width: 100%
+	}
+	.map-container .map-element{
+		display: inline-block;
+	}
+	/* #mapLeft {
+	  position: absolute;
+	  top: 10px;
+	  left: 10px;
+	  width: 100%;
+	}*/
+	#mapRight {
+	  margin-left: 10px
+	}
+	#console {
+	  position: absolute;
+		top: 5px;
+		left: 5px;
+		width: 200px;
+	  margin: 5px;
+	  padding: 0px 15px;
+	  background-color: white;
+	}
+	.session {
+  	margin-bottom: 10px;
+	}
+	.row {
+	  width: 100%;
+		margin:auto;
+	}
+	.colors {
+	  margin-bottom: 5px;
+	}
+	table {
+		width: 100%;
+		border: 0px;
+		margin-bottom: 5px;
+	}
+	table td {
+		width:13%;
+		display: inline-block;
+		height:20px;
+	}
+	table td.label{
+		font-size:8px;
+		word-wrap: break-word;
+		text-align: center;
+	}
+	.rd-group .weekendSelect {
+    display: block;
+    font-size: 13px;
+    cursor: pointer;
+		margin-bottom: 10px;
+	}
+	.btn {
+    padding: 10px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 11px;
+    margin: 4px 2px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+	}
+	.btn-default{
+		background-color:#555555;
+		color:white;
+	}
+	.btn-default:hover{
+		background-color:#555555;
+		color:#efe997;
+	}
+	</style>
+
+	<body>
+		<div class = 'map-container'>
+	    <div class = 'map-element' id='mapLeft' style='width: 600px; height: 900px;'></div>
+			<div class = 'map-element' id='mapRight' style='width: 600px; height: 900px;'></div>
+		</div>
+		<div id='console'>
+		  <h3>NYC Subway Entry & Exit Volume</h3>
+			<div class='legend'>
+			  <p>Volume Color Legend</p>
+			  <div class='row colors'>
+					<table>
+					<tbody>
+					<tr>
+						<td style='background:#ffffff;'></td>
+						<td style='background:#ffffcc;'></td>
+						<td style='background:#fed976;'></td>
+						<td style='background:#fd8d3c;'></td>
+						<td style='background:#e04b25;'></td>
+						<td style='background:#a30e11;'></td>
+						<td style='background:#560000;'></td>
+					</tr>
+					<tr>
+						<td class='label q1'>1</td>
+						<td class='label q2'>2</td>
+						<td class='label q3'>3</td>
+						<td class='label q4'>4</td>
+						<td class='label q5'>5</td>
+						<td class='label q6'>6</td>
+						<td class='label q7'>7</td>
+					</tr>
+					<tr>
+						<td style='background:#ffffff;'></td>
+						<td style='background:#edf9ca;'></td>
+						<td style='background:#bbe8ea;'></td>
+						<td style='background:#7c99bc;'></td>
+						<td style='background:#456d9b;'></td>
+						<td style='background:#323c8d;'></td>
+						<td style='background:#530570;'></td>
+					</tr>
+					</tbody>
+					</table>
+			  </div>
+				<hr style="display: block; border-top: 1px solid #ccc;">
+				<div class='session' id='sliderbar'>
+				  <p>Time Interval: <label id='active-hour'>8AM-12PM</label></p>
+				  <input id='slider' class='row' type='range' min = "0" max = "24" step = "4" list="tickmarks" value='12'>
+					<datalist id="tickmarks">
+						<option value="0">
+					  <option value="4">
+					  <option value="8">
+					  <option value="12">
+					  <option value="16">
+					  <option value="20">
+						<option value="24">
+					</datalist>
+				</div>
+				<hr style="display: block; border-top: 1px solid #ccc;">
+				<p>Type of day: </p>
+				<div class="rd-group">
+					<label class="weekendSelect"><input type="radio" name="radgroup" value="all" checked>All</label>
+					<label class="weekendSelect"><input type="radio" name="radgroup" value="weekday">Weekdays/Non-holidays</label>
+					<label class="weekendSelect"><input type="radio" name="radgroup" value="weekend">Weekends/Holidays</label>
+				</div>
+			</div>
+			<button type="button" class="btn btn-default" id="renderbutton">Click to render grid</button>
+			<p style='font-size:10px;'>Data: <a href='https://data.ny.gov/Transportation/Turnstile-Usage-Data-2015/ug6q-shqc'>2015 NYC Turnstile Usage Data</a></p>
+		</div>
+
+    <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaHcyMzEyIiwiYSI6ImNqZmhudWd1NDAxZnMzM3RmdWRsZDU2cTQifQ.cyPjdpU2kzcAq0d-K5gzuw';
+
+		var breaks = Array.apply(null, Array(7)).map(function (_, i) {return i*20000;});
+
+		// Set innerHTML volumes with rounded up values from breaks
+		var labels = document.getElementsByClassName('label')
+
+		var getTextLabel = function(v){
+			if (v < 1000){
+				return String(v)
+			}
+			else if(v < 1000000){
+				return String(Math.floor(v/1000))+"k"
+			}
+			else{
+				return String(Math.floor(v/1000000))+"m"
+			}
+		};
+
+		for (var i = 0; i < labels.length-1; i++){
+			var value = breaks[i],
+					value_next = breaks[i+1]
+
+			var textString = getTextLabel(value),
+					textStringNext = getTextLabel(value_next)
+
+			labels[i].innerHTML = textString+"-"+textStringNext
+
+		}
+		// Set last label
+		labels[labels.length-1].innerHTML = getTextLabel(breaks[labels.length-1])+"+"
+
+    var map = new mapboxgl.Map({
+      container: 'mapLeft',
+      style: 'mapbox://styles/hw2312/cjfhmrha4b9932rqg54tvdv4n',
+      center: [-73.98,40.782],
+      zoom: 11.2,
+      bearing: 29
+    });
+
+		var map2 = new mapboxgl.Map({
+      container: 'mapRight',
+      style: 'mapbox://styles/hw2312/cjfhmrha4b9932rqg54tvdv4n',
+      center: [-73.98,40.782],
+      zoom: 11.2,
+      bearing: 29
+    });
+
+		function getGridForHour(mapElement,property, hour, isWeekend, shape_width){
+
+			if(mapElement.getSource('squareGrid')){
+				for(b in breaks){
+					if (b > 0) mapElement.removeLayer("subwaySquareGrid-"+b)
+				}
+				// Remove max layer
+				mapElement.removeLayer("subwaySquareGrid-"+(parseInt(b)+1))
+				mapElement.removeSource('squareGrid');
+
+			}
+			var weekendFilter = (function(isWeekend){
+				switch(isWeekend){
+					case 'weekday':
+						return ['==',['get','is_weekend_or_holiday'],0]
+						break;
+					case 'weekend':
+						return ['==',['get','is_weekend_or_holiday'],1]
+						break;
+				}
+			});
+
+			var queryObject = {
+				sourceLayer:"2015_turnstile_volume-97ae5e",
+				filter:['all',['==',['get','hour'],hour]]
+			}
+
+			if(isWeekend != 'all')
+				queryObject.filter.push(weekendFilter(isWeekend))
+
+			var filtered_data = mapElement.querySourceFeatures("turnstile_volume",queryObject);
+
+      // Create array of stations with filtered properties
+      var a = []
+      for (var i = 0; i < filtered_data.length; i ++){
+        var geom = turf.getGeom(filtered_data[i])
+        a.push(turf.point([geom.coordinates[0],geom.coordinates[1]],filtered_data[i].properties))
+      }
+
+      // Create envelope for encompassing all vertices
+      var fcollections = turf.featureCollection(filtered_data)
+      var pointFC = turf.featureCollection(a)
+
+      var enveloped = turf.envelope(fcollections)
+
+      //CREATE A GRID
+      //must be in order: minX, minY, maxX, maxY ... you have to pick these out from your envelope that you created previously
+      var bbox = [enveloped.geometry.coordinates[0][0][0]-0.025,
+                  enveloped.geometry.coordinates[0][0][1]-0.025,
+                  enveloped.geometry.coordinates[0][2][0]+0.025,
+                  enveloped.geometry.coordinates[0][2][1]+0.025];
+      var cellWidth = shape_width // Make sure this is not too big
+      var hexgrid = turf.squareGrid(bbox,cellWidth);
+
+      // console.log(fcollections)
+      var collected = turf.collect(hexgrid,pointFC,property,'total')
+
+			var volume_array = []
+			for(var i = 0; i < collected.features.length; i++){
+				var props = collected.features[i].properties
+
+				// If not empty, add sum all values
+				collected.features[i].properties.total = props.total.length > 0 ? props.total.reduce((a,b) => parseInt(a)+parseInt(b)) : 0
+				volume_array.push(collected.features[i].properties.total)
+			}
+
+			mapElement.addSource('squareGrid',{
+         "type": "geojson",
+         "data": collected
+      });
+
+			// Returns array of 6 numbers, with min and max as breaks[0] and breaks[breaks.length-1], or use hard-coded breaks
+			// var breaks = ss.equalIntervalBreaks(volume_array,5)
+
+			var colors = property == 'entry_volume' ? ['#ffffff', '#ffffcc','#fed976','#fd8d3c','#e04b25','#a30e11'] : ['#ffffff', '#edf9ca','#bbe8ea','#7c99bc','#456d9b','#323c8d'],
+					transparency = [0.3,0.5,0.5,0.5,0.5,0.5],
+					maxColor = property == 'entry_volume' ? '#560000' : '#530570',
+					maxTransparency = 0.5
+
+
+			for(b in breaks){
+				if (b > 0){
+					mapElement.addLayer({
+					 "id": "subwaySquareGrid-" + b,
+					 "type": "fill",
+					 "source": "squareGrid",
+					 "layout": {},
+					 "paint":{
+						 'fill-color': colors[b-1],
+						 'fill-opacity': transparency[b-1],
+						 'fill-outline-color':'#ffffff'
+					 }
+				 },"road-label-small");
+			 }
+			}
+
+			for(var i = 0; i < breaks.length; i++){
+				if (i > 0){
+					var filters = ['all',['>',['to-number',['get','total']],breaks[i-1]],['<=',['to-number',['get','total']],breaks[i]]]
+					mapElement.setFilter('subwaySquareGrid-' + i, filters)
+					// debugger
+				}
+			}
+
+			// Add another layer for max
+			mapElement.addLayer({
+			 "id": "subwaySquareGrid-" + i,
+			 "type": "fill",
+			 "source": "squareGrid",
+			 "layout": {},
+			 "paint":{
+				 'fill-color': maxColor,
+				 'fill-opacity': maxTransparency,
+				 'fill-outline-color':'#ffffff'
+			 }
+		 },"road-label-small");
+			var filters = ['all',['>',['to-number',['get','total']],breaks[breaks.length-1]]]
+			mapElement.setFilter('subwaySquareGrid-' + i, filters)
+
+		}
+
+		function loadSourceLayer(mapElement){
+			mapElement.addSource("turnstile_volume",{
+          type:"vector",
+          url:"mapbox://hw2312.4z8rtzme"
+      })
+
+      mapElement.addLayer({
+          id: "stations",
+          type: "circle",
+          source: "turnstile_volume",
+          'source-layer': "2015_turnstile_volume-97ae5e",
+          paint: {
+            'circle-radius':3,
+            'circle-stroke-color':"#ffffff",
+            'circle-stroke-width':1,
+            'circle-stroke-opacity':0.5,
+            'circle-color': "#ea9800",
+            'circle-opacity':1
+          }
+      },'road-label-small')
+
+			return
+		}
+
+		// Add sources
+    map.on('load',function(){
+			loadSourceLayer(map)
+			loadSourceLayer(map2)
+    });
+
+		document.getElementById('renderbutton').addEventListener('click',function(){
+			var slider = document.getElementById('slider')
+			var hour = parseInt(slider.value) % 24;
+
+			var isWeekend = (function(){
+				var inputs = document.getElementsByTagName("input")
+				for(elem in inputs){
+					if(inputs[elem].type == "radio" && inputs[elem].checked)
+						return inputs[elem].value
+				}
+			});
+
+			document.getElementById('renderbutton').innerText = "Click to update with new params";
+
+			getGridForHour(map,'entry_volume', hour, isWeekend(), 1)
+			getGridForHour(map2,'exit_volume', hour, isWeekend(), 1)
+
+		});
+		document.getElementById('slider').addEventListener('input', function(e) {
+			var hour = parseInt(e.target.value) % 24;
+
+			// converting 0-24 hour to AMPM format
+			var ampm = hour >= 12 ? 'PM' : 'AM';
+			var hour12 = hour % 12 ? hour % 12 : 12;
+
+			var prior_hour = hour == 0 ? 20 : hour - 4
+			var prior_ampm = prior_hour >= 12 ? 'PM' : 'AM';
+			var prior_hour12 = prior_hour % 12 ? prior_hour % 12 : 12;
+
+			// update text in the UI
+			document.getElementById('active-hour').innerText = prior_hour12 + prior_ampm + " to " + hour12 + ampm;
+		});
+
+
+
+    </script>
+  </body>
+
+</html>

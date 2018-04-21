@@ -527,6 +527,11 @@ https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i5
 
 The original data set comprised 5.58M rows with 24 cols.  The oldest case happened on Jan 1, 1948 and the most recent case in the dataset was on Dec, 31, 2016.
 
+The entire sequence of data pre-processing performed on the crime data was done on Python and the iPython notebook is available at: 
+https://github.com/hw2312/fourcharsunder/blob/master/crime/crime.ipynb
+
+Below provides a summary:
+
 ### 5.2.1 Extracting only the relevant rows - 2015 data, Crime in Subway Stations, Manhattan Stations
 As the most recent taxi data was for year 2015, we used the year 2015 for crime data to be consistent.   After filtering for only 2015 data, the crime dataset was reduced to 477,031 rows.  
 

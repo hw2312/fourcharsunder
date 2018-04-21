@@ -373,3 +373,78 @@ In an attempt to isolate the noise, we looked at the crime count for just the to
 Next, we looked at human traffic and crime count across time and there seemed to be a positive correlation.  This matched our earlier observation with scatter plots. 
 
 We further tried to look at rainfall with human traffic, and rainfall with crime rate, but these two graphs were dominated by large fluctuations in rainfall and were not informative.  It was clear to us that scatter plot offered a better way to visualize relationship between different variables especially if we did not believe that time was a major influencing factor for two parameters (e.g., crime and rainfall) in the same way. 
+
+
+#3. Description of Data
+
+## 3.1 Crime Data
+Crime data was collected from the following website provided by the city of New York:
+https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i
+
+The original data set comprised 5.58M rows with 24 cols.  The oldest case happened on Jan 1, 1948 and the most recent case in the dataset was on Dec, 31, 2016.
+
+### 3.1.1 Extracting only the relevant rows - 2015 data, Crime in Subway Stations, Manhattan Stations
+As the most recent taxi data was for year 2015, we used the year 2015 for crime data to be consistent.   After filtering for only 2015 data, the crime dataset was reduced to 477,031 rows.  
+
+We then filtered the data to include only the crimes committed at subway stations.  This further reduced the number or rows down to 11,228.
+
+Lastly, we filtered for only the stations in Manhattan.  This reduced the number of rows down to 5,367.
+
+### 3.1.2 Include time window and date/time conversion
+As the date and time of the data set was in string type, we had to convert it to date and time format in order to filter the data by date and time.  Regarding time, subway human traffic data was organized in 4 hourly interval.  To facilitate analysis of crime data with subway human traffic data, we inserted an additional column in this crime dataset to indicate which 4 hourly  window the crime was commmited in.
+
+### 3.1.3 Remove rows with null lat /long
+The crime dataset on its own did not indicate in which subway station the crimes were committed.  Therefore, we wrote a program that assigned a crime location to the closest subway station based on distance calculated using lat/long difference.
+
+For this purpose, it was therefore important that the data had lat/long entries.  However, 170 of the filtered records had null for lat/long.  We removed these records from our analysis.
+
+### 3.1.4 Drop columns
+As earlier mentioned, there were 24 columns in the dataset.  Many of these columns were not necessary for our analysis.  For instance, we did not need to know the date and time at which the crime was reported.  We were interested in the date/time at which the crime was *committed* and this information was available in the dataset.  We were also not interested in the codes used for each crime type which were for the police department's internal reference.  We were interested in the type of crime expressed in a language familiar to the lay person.  For that, the dataset conveniently included a column to indicate which of 3 categories the crime committed was in: felony, misdemeanor, violation.  There were also other columns giving a detailed description of the crime but for the purpose of faceting and grouping, we felt that these information was too granular and we did not include them.  Lastly, there were also other columns indicating if the crime was committed in a park, which we did not includ as these were also irrelevant for our analysis.  
+
+In the end, we kept 12 columns the highlights of which included: crime commmited date, time, lat/long, crime category.
+
+We added 6 columns, which as earlier mentioned were columns that we engineered to capture in which 4 hourly window the crime was committed, plus in which subway stations (based on the results of our program to estimate the subway stations based on lat/long proximity)  
+
+## 3.2 Weather Data
+Weather data was collected from the following website provided by the National Centers for Environmental Information (NOAA):
+https://www.ncdc.noaa.gov/cdo-web/datatools/lcd
+
+There was only one weather station for selection in Manhattan, located at Central Park.  Since Manhattan is relatively small and it is unlikely there to be large variations in weather conditions in different parts of Manhattan, this was sufficient for the purpose of our project.
+
+Unlike the crime data for which we had to download the entire historical set and then filter for 2015 data on our own, we were able to specify the date range within the website before we downloaded the data.
+  
+The downloaded dataset comprised 13,329 rows and 90 cols.
+
+The weather dataset contained quite a rich set of weather-related data, such as humidity, average wind speed, monthly minimum temperature, hourly sky conditions.  For this dataset, we decided to focus only on rainfall as the weather condition to use when analyzing weather's relationship with crime and subway human traffic data.
+
+### 3.2.1 Include time window and date/time conversion
+Similar to what we did for crime data, we converted the date and time from string type to date and time format.  Likewise, we inserted an additional column in this weather dataset to indicate which 4 hourly  window the weather recording was made in.
+
+### 3.2.2 Drop columns
+As earlier mentioned, there were 90 columns in the dataset and many of these columns were not related to rainfall and necessary for our analysis.  Eventually, this dataset was transformed into one with only 3 columns, all of which were engineered features.  We explain the feature engineering below.
+
+### 3.2.3 Clean up  rainfall readings
+There were several columns representing rainfall, but we focused only on the one giving hourly rainfall (i.e., the highest time resolution).  For hourly rainfall, there were readings with 'T' for value instead of a numerical reading.  There were 1,991 such readings.  'T' represented 'trace' meaning a very small amount of rainfall which were too small for the instrument to provide an accurate reading.  For these readings, we replaced them with 0.
+
+There were also 1,761 hourly rainfall readings with a null value.  Likewise, we replaced them with '0'.
+
+There were hourly readings appended with the character 's' to indicate that these were estimated readings.  For the purpose of our project, we did not have to differentiate between estimated and actual measured rainfall.  Therefore, we removed this information.
+
+Lastly, the hourly rainfall readings were recorded as strings which we could not use for numerical operations.  We converted them to numerical numbers.
+
+### 3.2.4 Aggregate rainfall readings
+As consistent with the entire project, we were interested in data up to a 4hourly window resolution.  The hourly rainfall data had to be converted to a similar format to facilitate our analysis.  Therefore, we aggregated the rainfall readings within each 4 hourly window to get the total rainfall measured within that window.
+
+As mentioned earlier, we transformed this weather dataset into 3 columns: they are date, 4hourly time interval and total rainfall (within that 4hourly time interval).
+
+## 3.3 Taxi Data
+Taxi data was collected from the following website provided by the city of New York:
+https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u
+
+2015 Yellow Taxi Trip data includes all taxi trips completed in yellow taxis in New York from January to June in 2015. This dataset is collected by technology providers authorized under the Taxicab Passenger Enhancement Program and provided to the NYC Taxi and Limousine Commission. This dataset is published on NYC Open Data. The recorded fields are pick-up and drop-off dates and locations, trip distances, payment methods, fares, etc. There are total of 77.1 million rows. Due to the large size of the dataset, we decided to work with trips completed in February, because February has the most average daily trips, which is approximately 443,000 trips per day. 
+
+Analysis of Data Quality
+The purpose of using 2015 Yellow Trip data was to map pick-up and drop-off locations to the nearest subway stations in Manhattan and visualize behavioral patterns between subway riders and taxi riders. Only 1.7% of the dataset has missing pick-up and drop-off locations. And this dataset contains all taxi trips in 2015, which guarantees no bias. We understand that February data won’t represent the entire dataset, but for simplicity, we excluded seasonality from our analysis.
+
+
+

@@ -92,7 +92,7 @@ ggplot(data2_1, aes(y = avg_exit, x = interval)) +
 ```{r}
 # GroupBy 1.day & 2.interval --> average entry & exit volume
 turnstile$is_holiday <- as.character(turnstile$is_holiday)
-data2_2 <- turnstile %>% select(interval, day, is_holiday, entry_volume, exit_volume)   %>% group_by(day, is_holiday, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+data2_2 <- turnstile %>% select(interval, day, is_holiday, entry_volume, exit_volume)   %>% group_by(day, is_holiday, interval)
 
 # Change the value of "day" to "Weekday" or "Weekend"
 day_list = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
@@ -107,7 +107,7 @@ for (i in day_list){
 
 data2_2 <- data2_2 %>% ungroup() %>% mutate(day = if_else(day == "Weekday" & is_holiday == "False", "Weekday", "Weekend"))
 
-data2_2 <- data2_2 %>% group_by(day, interval) %>% summarise(avg_entry = mean(avg_entry), avg_exit = mean(avg_exit))
+data2_2 <- data2_2 %>% group_by(day, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
 
 data2_2$interval <- factor(data2_2$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
 ```

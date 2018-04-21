@@ -561,10 +561,15 @@ https://www.ncdc.noaa.gov/cdo-web/datatools/lcd
 There was only one weather station for selection in Manhattan, located at Central Park.  Since Manhattan is relatively small and it is unlikely there to be large variations in weather conditions in different parts of Manhattan, this was sufficient for the purpose of our project.
 
 Unlike the crime data for which we had to download the entire historical set and then filter for 2015 data on our own, we were able to specify the date range within the website before we downloaded the data.
-  
+
 The downloaded dataset comprised 13,329 rows and 90 cols.
 
 The weather dataset contained quite a rich set of weather-related data, such as humidity, average wind speed, monthly minimum temperature, hourly sky conditions.  For this dataset, we decided to focus only on rainfall as the weather condition to use when analyzing weather's relationship with crime and subway human traffic data.
+
+The entire sequence of data pre-processing performed on the weather data was done on Python and the iPython notebook is available at: 
+https://github.com/hw2312/fourcharsunder/blob/master/weather/weather_new.ipynb
+
+Below provides a summary:
 
 ### 5.3.1 Include time window and date/time conversion
 Similar to what we did for crime data, we converted the date and time from string type to date and time format.  Likewise, we inserted an additional column in this weather dataset to indicate which 4 hourly  window the weather recording was made in.

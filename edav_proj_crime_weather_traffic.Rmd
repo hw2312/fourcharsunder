@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Create bar charts of crime numbers against subway stations, in decreasing order
+**Bar charts of crime numbers against subway stations, in decreasing order**
 
 ```{r, echo=TRUE, fig.height=8, fig.width=5}
 library(tidyverse)
@@ -43,7 +43,11 @@ top_felony_stations
 top_misdemeanor_stations
 top_violation_stations
 ```
-By looking at these bar charts and also at the tables of top 5s, we see that the crime count by station for the 3 different crime types were closely related.  For example, 125 ST (line 4, 5, 6) and 23 ST were in the top 5 for all 3 types of crime.  We see that the similarity between misdemeanor and violation was strongest among the 3 possible pairings of crime type (i.e., felony-misdemeanor, felony-voilation, misdemeanor-violation).  In a way, this was not surprising because misdemeanor and violation are more similar than felony which is a a more serious type of crime.
+
+
+By looking at these bar charts and also at the tables of top 5s, we see that the crime count by station for the 3 different crime types were closely related.  For example, 125 ST (line 4, 5, 6) and 23 ST were in the top 5 for all 3 types of crime.  We see that the similarity between misdemeanor and violation was strongest among the 3 possible pairings of crime type (i.e., felony-misdemeanor, felony-voilation, misdemeanor-violation).  In a way, this was not surprising because misdemeanor and violation are more similar than felony which is a more serious type of crime.
+
+**Box plots of crime numbers by time of the day**
 
 ```{r, echo=FALSE}
 crime_group_station_time_interval <- subway_crime %>% group_by(Station_Name_w_Line, hour_interval) %>% summarize(crime_count = n())
@@ -71,7 +75,11 @@ fig2.5 <- ggplot(crime_group_station_violation_time_interval, aes(hour_interval,
 fig2.5
 ```
 
+
 For overall crime count, the median was rather consistent across the time periods.  The number of crimes committed was highest from 1600-2000hr, which coincided with the evening peak period.  Based on that, we expected the morning peak (0800-1200hr) to display the next highest crime count, but the data did not support that.  Instead, 1200-1600hr showed the second highest crime count based on median.  Also, variance (as indicated by length of the box) was highest for the time periods with the highest median crime count. The patterns we saw in the overall count were similarly visible for felony and misdemeanor.  For violation, the only similarity with the other crime types was that 1600-200hr was the period with the highest crime rate.
+
+**Scatter plots of Subway Human Traffic against Crime Count (by weekend, weekday; by crime type)**
+*One data point = one day of the year*
 
 ```{r, echo=FALSE}
 crime_count_date <- subway_crime %>% group_by(CMPLNT_FR_DT) %>% summarize(crime_count = n())
@@ -117,6 +125,8 @@ fig3.8 <- ggplot(violation_count_traffic_wkend, aes(x = crime_count, y = traffic
 fig3.8
 
 ```
+
+
 For the above and subsequent similar scatter plots, each data point on the graph represented a single day (e.g., total human traffic across all stations for that day, total crimes committed across all stations for that day).  
 
 We created the above scatter plots to investigate if there was a relationship between human traffic and crime rate at subway stations.
@@ -124,6 +134,9 @@ We created the above scatter plots to investigate if there was a relationship be
 We plotted the charts separately by weekday and weekend to isolate any effects that weekday vs weekend might have on the relationship between human traffic count and crime count.
 
 Overall, there was a positive correlation between human traffic and crime count for both weekday and weekend.  A similar pattern was observed for felony and misdemeanor.  However, the relationship was less obvious for violation for which the sample sizes were small.
+
+**Scatter plots of Subway Human Traffic against Rainfall (by weekend, weekday)**
+*One data point = one day of the year*
 
 ```{r, echo=FALSE}
 subway_total_traffic_wkday_day
@@ -143,11 +156,16 @@ fig4.2 <- ggplot(rainfall_traffic_wkend, aes(x = total_rainfall, y = traffic)) +
 fig4.2
 
 ```
+
+
 The above scatter plots investigated if there was a relationship between rainfall and human traffic at subway stations.
 
 For weekdays, we saw that human traffic was not much influenced by rainfall, which was not surprising because everyone had to go to work/school regardless of whether or not it was raining.   For weekends, we saw a stronger negative relationship between rainfall and human traffic, which made sense because people might cancel their outdoor activities or leisure travelling plans depending on the weather. 
 
 We also saw that most of the data points were clustered around the y-axis, which was due to the fact that on most days there were no rain.
+
+**Scatter plots of Crime Count against Rainfall (by crime type)**
+*One data point = one day of the year*
 
 ```{r, echo=FALSE}
 crime_count_date
@@ -189,6 +207,8 @@ fig5.5 <- ggplot(crime_rainfall_wkend, aes(x = total_rainfall, y = crime_count))
 fig5.5
 
 ```
+
+
 The above scatter plots investigated if there was a relationship between crime rate and rainfall at subway stations.
 
 There did not seem to be a strong relationship between overall crime count and rainfall but we did notice that on days with heavy rain, crime count was never high, especially when we drilled down to look at misdemenor and violations.  One explanation would be that heavy rainfall might have deterred potential offenders from travelling to the subway stations.   
@@ -196,6 +216,9 @@ There did not seem to be a strong relationship between overall crime count and r
 However, we noticed that this was not true for felony.  High counts of felony were observed even for days with heavy rain, suggesting that felony was less dependent on the weather.
 
 Previously, we saw that subway human traffic was sensitive to rainfall on weekends but not so much on weekdays.  Therefore, we wondered if crime count would likewise be more sensitive to rainfall on weekends.  Based on visual inspection, it did not seem like weekend changed the relationship between crime rate and rainfall.  
+
+**Scatter plots of Crime Count against Subway Human Traffic (by crime type; by weekend, weekday)**
+*One data point = one subway station*
 
 ```{r, echo=FALSE}
 wkday <- subway_total_traffic %>% filter(day_of_week %in% c(0, 1, 2, 3, 4) & is_holiday == "False") %>% select(date)
@@ -239,6 +262,8 @@ fig6.7
 In the previous set of scatter plots, we were using each point to represent a day aggregating across all subway stations.  For this set of scatter plts, we instead aggregated across time and let each point represent a unique subway station.  The focus here was to investigate if a subway station with higher traffic also suffered from higher crime rate.  
 
 We noticed a general trend of higher crime count for stations with higher human traffic, and this was true regardless of weekday or weekend, or crime type.  There were two outliers with lower traffic but very high crime count (23 ST on line 6 and 125 ST on line 4, 5 & 6), which meant that for these two stations, their higher crime rate could not be well explained by human traffic alone.  Other factors affecting crime rate could be whether or not that neighborhood tended to have higher crime rate.  Also, lower traffic could also work in the reverse, as a station that is more isolated may attract more potential offenders, since their crimes could be more easily committed unseen.
+
+**Time Series of Crime Count across time; superimposed with Subway Human Traffic, Rainfall**
 
 ```{r, echo=FALSE}
 fig7.1 <- ggplot(crime_count_date, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + ggtitle("Crime Count across Time") + xlab("Time") + ylab("Crime Count") + geom_smooth(method = "loess", span = .5, se = FALSE)

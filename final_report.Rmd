@@ -339,7 +339,7 @@ The above scatter plots investigated if there was a relationship between rainfal
 
 For weekdays, we saw that human traffic was not much influenced by rainfall, which was not surprising because everyone had to go to work/school regardless of whether or not it was raining.   For weekends, we saw a stronger negative relationship between rainfall and human traffic, which made sense because people might cancel their outdoor activities or leisure travelling plans depending on the weather. 
 
-We also saw that most of the data points were clustered around the y-axis, which was due to the fact that on most days there were no rain.
+We also saw that most of the data points were clustered around the y-axis, which was due to the fact that on most days there were no rain.  On that note, we had to highlight here that the relationship that we saw here would be very susceptible to outlier effect, i.e., the regression slope that was plotted on the above graph may shift significantly if there was another outlier that, for instance, represented a day with higher rainfall and higher traffic.
 
 
 #### 4.2.3-3 Scatter plots of Crime Count against Rainfall (by crime type)
@@ -436,6 +436,8 @@ In the previous set of scatter plots, we were using each point to represent a da
 
 We noticed a general trend of higher crime count for stations with higher human traffic, and this was true regardless of weekday or weekend, or crime type.  There were two outliers with lower traffic but very high crime count (23 ST on line 6 and 125 ST on line 4, 5 & 6), which meant that for these two stations, their higher crime rate could not be well explained by human traffic alone.  Other factors affecting crime rate could be whether or not that neighborhood tended to have higher crime rate.  Also, lower traffic could also work in the reverse, as a station that is more isolated may attract more potential offenders, since their crimes could be more easily committed unseen.
 
+Lastly, the inverse relationship that we observed here between minor crime counts and rainfall may only be a proxy for the other relationships that we have previously observed (i.e., observed lower crime rate for lower traffic, lower traffic with lower rainfall).
+
 
 #### 4.2.5 Time Series of Crime Count across time; superimposed with Subway Human Traffic, Rainfall
 
@@ -529,6 +531,46 @@ We further tried to look at rainfall with human traffic, and rainfall with crime
 
 ## 5. Data Pre-processing process - description of data and analysis of data quality
 
+### 5.1 NYC Subway Turnstile Data
+
+Turnstile data was collected from the following website provided by the:
+https://data.ny.gov/Transportation/Turnstile-Usage-Data-2015/ug6q-shqc/data
+
+The entire sequence of data pre-processing performed on the turnstile data was done on Python and the iPython notebook is available at: 
+https://github.com/hw2312/fourcharsunder/blob/master/data/code/CoordsManhattanStations.ipynb
+https://github.com/hw2312/fourcharsunder/blob/master/data/code/TurnstileUsageManhattan.ipynb
+
+
+#### 5.1.1 Quality Issue with Turnstile Usage Data - inconsistency in "timestamp"
+
+* We wanted to explore turnstile data with time of a day. However, the timestamp in the original turnstile data was inconsistant, which made it difficult to analyze the trend of subway usage over interval.
+* To deal with this issue, we discretized timestamp values into 6 intervals by 4 hours (i.e., 12am - 4am).
+
+
+#### 5.1.2 Quality Issue with Turnstile Usage Data - inconsistency in "cumulative count of entry and exit"
+
+* After we discretizing timestamp into interval, we subtracted the cumulative count of entry and exit for each station so that we can see how many people are entering into or exiting from subway stations for each interval. 
+* The second issue we had is that we were getting some negative entry/exit volumes or exorbitanly high entry/exit volume.
+* The negative values seem to come from a couple possibilities:
+  - Some turnstiles record entry/exit in reverse choronological order
+  - Some turnstiles seem to reset their counters, which results in negative value when the value after reset is subtracted from the value before reset.
+* To deal with thess issues, we done following steps:
+  - Convert all negative entry/exit volumes into positive values (assume the reverse records are mistakes)
+  - Drop all values that are above the 0.9999 quantile (which is around 3000/4hr/device, or around 13/min/device), by replacing them with np.NaN.
+  
+
+#### 5.1.3 Quality Issue with Turnstile Usage Data - inconsistency in "station name"
+* To interactively explore and analyze the turnstile data, we had to incorporate latitude and longitude of information into the turnstile data.
+* The approach we made is adding a column for latitude and longitude in turnstile data and fill the values by matching station name and line information from another data that contains latitude and longitude information.
+* However, station name in turnstile data had some issues:
+  - Different name of station name for different entrance (uptown / downtown).
+  - Inconsistency in the format (i.e, AV vs AVE).
+* To deal with these issues:
+  - We tried to keep consistency in the format of station name by applying regular expression format.
+  - We plotted stations on the map and merge stations which is the same but have different names.
+  - We merged the stations under rule that we kept some entrance as distinct station if it is located one or more block away from the other entrances of the same station.
+  
+  
 ### 5.2 Crime Data
 
 Crime data was collected from the following website provided by the city of New York:
@@ -624,13 +666,44 @@ As mentioned earlier, we transformed this weather dataset into 3 columns: they a
 
 ### 5.4 Taxi Data
 
-Taxi data was collected from the following website provided by the city of New York:
-https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u
+Taxi data was collected from the following website provided by the city of New York:https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u
 
-2015 Yellow Taxi Trip data includes all taxi trips completed in yellow taxis in New York from January to June in 2015. This dataset is collected by technology providers authorized under the Taxicab Passenger Enhancement Program and provided to the NYC Taxi and Limousine Commission. This dataset is published on NYC Open Data. The recorded fields are pick-up and drop-off dates and locations, trip distances, payment methods, fares, etc. There are total of 77.1 million rows. Due to the large size of the dataset, we decided to work with trips completed in February, because February has the most average daily trips, which is approximately 443,000 trips per day. 
+2015 Yellow Taxi Trip data includes all taxi trips completed in yellow taxis in New York from January to June in 2015. This dataset is collected by technology providers authorized under the Taxicab Passenger Enhancement Program and provided to the NYC Taxi and Limousine Commission. The recorded columns are pick-up and drop-off dates and locations, trip distances, payment methods, fares, etc. There are total of 77.1 million rows. Due to the large size of the dataset, we decided to work with trips completed in February, because February has the most average daily trips, which is approximately 443,000 trips per day.
 
-Analysis of Data Quality
-The purpose of using 2015 Yellow Trip data was to map pick-up and drop-off locations to the nearest subway stations in Manhattan and visualize behavioral patterns between subway riders and taxi riders. Only 1.7% of the dataset has missing pick-up and drop-off locations. And this dataset contains all taxi trips in 2015, which guarantees no bias. We understand that February data won’t represent the entire dataset, but for simplicity, we excluded seasonality from our analysis.
+Only 1.7% of the dataset has missing pick-up and drop-off locations. And this dataset contains all taxi trips in 2015, which guarantees unbiased data. We understand that February data won’t represent the entire dataset, but for simplicity, we excluded seasonality from our analysis.
+
+#### 5.4.1 Extracting only the relevant columns 
+
+The purpose of using 2015 Yellow Trip data was to map pick-up and drop-off locations to the nearest subway stations in Manhattan and visualize behavioral patterns between subway riders and taxi riders. Therefore, the columns we kept were pick-up and drop-off dates and locations.
+
+
+#### 5.4.2 Remove rows with missing data
+
+There were rows with missing pick-up/drop-off latitude and longitude entries. The proportion of the missing row is only 1.7% of the entire dataset. Given the large size of data, we removed these rows with missing data.
+
+#### 5.4.3 Cross Join with a file that contains Subway Station Coordinates
+
+To find the closest subway station from taxi pick-up/drop-off locations, we calculated squared distances from pick-up/drop-off locations to all subway stations. We made a simple assumption that people could have taken a subway instead of taking a taxi by using the closest subway stations. We filtered out the minimum distances for each taxi ride and mapped pick-up/drop-off locations to corresponding subway stations.
+
+#### 5.4.4 Group By Station ID, Date, Hour and aggregate row counts
+
+We transformed taxi data into the same structure as turnstile data by calculating row counts based on (Station ID, Date, Hour) pairs. These preprocess steps were done in Scala and Spark. As a result, we could compare taxi riders with subway riders based on different time of the day and days of the week.
+
 
 ## 6. Conclusion
 
+We started this project by asking ourselves what was the topic closest to our hearts what we were most curious about regarding that topic.  As in turned out, the NYC subway interested all of us immensely, it being the city's bloodline and an integral part of our daily lives.  And so we started this project, with certain answers in mind for the questions that we have but at the same time not entirely certain about what we would find, as we perform an exploratory data analysis journey with NYC subway and related datasets.
+
+There were many findings that largely matched our collective and conventional wisdom.  We reiterate here a highlight of some of such findings: Evening peak period (1600-2000hr) experienced the highest subway usage (based on turnstile data).   Weekday subway usage was higher than weekend.  Rainfall intensity was inversely related to subway traffic, but less so on weekdays.  Volume of crime committed at subway stations was positively correlated with subway usage, regardless of whether we look at it aggregated across time for unique stations or aggregated across time for each day.
+
+At the same time, we were pleasantly surprised by other findings that revealed new patterns/relationships that we were previously unaware of/contrary to our expectations.   For most of these findings, we were able to find very reasonable explanations and if we did we explained it in this report.  Examples to mention again include: Unlike evening peak, subway station entry in Manhattan during morning peak period was not high.  (As mentioned in the report, we eventually linked this to the fact that most people working in Manhattan do not stay in Manhattan; therefore, they would have entered the subway system outside of and then exited at Manhattan.)   Even though weekend subway human traffic was lower than weekday, it was not substantially so.  (We linked this to the fact that Manhattan is a global tourist spot and there would still be many visitors from all over the world using its subway system on weekends.)  We also found that crime rate was very slightly inversely related to rainfall but only for minor crimes (misdemeanor / violation); for felony, there were days with heavy rain and very high crime counts.  One last finding to mention would be that there were two outlier stations (23 ST, line 6, and 125 ST, line 4, 5 & 6) with very high crime rate even though the human traffic that they experienced were not that high.  We took it that there were other factors affecting crime rate which were not captured in our report.  From this point, we would like to mention a few other learning points (some of which were not new to us but served as reinforcement) that we took from this project.
+
+Firstly, causation does not mean correlation.  The patterns that we found here only suggested but did not confirm a cause and effect relationship.  There could be other factors at play or the pattern that we saw may only be a proxy for a deeper direct relationship.
+
+Secondly, data pre-processing is an extremely important and time-consuming though unseen part of any data science project.  As the saying goes, garbage in garbage out.  In our case, we took pains to ensure that the data we used for exploration was properly cleaned.  Simple example would be to convert data to the proper types and remove/impute null values.  A more subtle and more challenging example was turnstile data some of which showed unusually high or low count.  We uncovered such problems as visualized the data / took the range of the data column for preliminary analysis.  (We attributed the turnstile count anomaly to the counter resetting itself when it reached the max, or a counter counting in the wrong direction.)
+
+Thirdly, data exploration is not a linear process.  And there are endless ways to combine data together and visualize them in different ways using different tools.  There was never a single way that worked best, though certain basic data visualization principles applied (e.g., avoid using shape or color if possible).  More often than not, the more combinations  we tried, the more insights we got and the better we understood our data.  For example, when we looked at crime count as a time-series, we noticed large fluctuations.  We suspected that it was due to the weekday vs weekend effect, or due to opposing/magnifying effects from different crime types.  However, after isolating for these effects, the fluctuations remained.  We concluded that there were other influencing factors on crime count that were not analyzed in this project, or simply that there was a strong element of randomness to crime count that could not be explained by any factor.
+
+And lastly, we learned to write down what we expected to see from our data but keep an open mind regarding the results.  Results that did not match our expectations turned out to be just as if not more rewarding than those that did, mainly because we learned something new from the data.  
+
+This project represents the culmination of what we learned from the Exploratory Data Analysis and Visualization class; itis a fitting end to what has been a very exciting and rewarding journey for the four of us. 

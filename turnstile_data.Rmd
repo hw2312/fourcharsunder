@@ -1,0 +1,168 @@
+---
+title: "EDAV Final Project"
+author: FourCharUnder
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,
+                      message = FALSE)
+```
+
+### Static illustration of turnstile data
+
+```{r}
+library(tidyverse)
+# read data
+turnstile = read.csv("2015_manhattan_turnstile_usage.csv")
+```
+
+### 1.Average by day of week
+```{r}
+# GroupBy 1.day & 2.interval --> average entry & exit volume
+data1 <- turnstile %>% select(interval, day, entry_volume, exit_volume)   %>% group_by(day, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder by day & interval
+data1$day <- factor(data1$day, c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
+data1$interval <- factor(data1$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=8, fig.width=8}
+ggplot(data1, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+
+
+```{r fig.height=8, fig.width=8}
+ggplot(data1, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+### 2-1.Average by all
+```{r}
+# GroupBy interval --> average entry & exit volume
+data2_1 <- turnstile %>% select(interval, entry_volume, exit_volume)   %>% group_by(interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder interval
+data2_1$interval <- factor(data2_1$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=5, fig.width=8}
+ggplot(data2_1, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Interval") + coord_flip()
+```
+
+```{r fig.height=5, fig.width=8}
+ggplot(data2_1, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval")  + coord_flip()
+```
+
+### 2-2.Average by weekday vs weekend & holiday
+```{r}
+# GroupBy 1.day & 2.interval --> average entry & exit volume
+turnstile$is_holiday <- as.character(turnstile$is_holiday)
+data2_2 <- turnstile %>% select(interval, day, is_holiday, entry_volume, exit_volume)   %>% group_by(day, is_holiday, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+
+# Change the value of "day" to "Weekday" or "Weekend"
+day_list = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+for (i in day_list){
+  if (i != "Saturday" & i != "Sunday"){
+    data2_2[,"day"] <- data.frame(lapply(data2_2[,"day"], function(x) {gsub(i, "Weekday", x)}))
+  }
+  else {
+    data2_2[,"day"] <- data.frame(lapply(data2_2[,"day"], function(x) {gsub(i, "Weekend", x)}))
+  }
+}
+
+data2_2 <- data2_2 %>% ungroup() %>% mutate(day2 = if_else(day == "Weekday" & is_holiday == "False", "Weekday", "Weekend"))
+
+data2_2 <- data2_2 %>% group_by(day, interval) %>% summarise(avg_entry = mean(avg_entry), avg_exit = mean(avg_exit))
+
+data2_2$interval <- factor(data2_2$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=3, fig.width=8}
+ggplot(data2_2, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+```{r fig.height=3, fig.width=8}
+ggplot(data2_2, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+
+### 3-1.Average by line & day of week
+```{r}
+data3_1 <- turnstile %>% select(day, lines, entry_volume, exit_volume)   %>% group_by(lines, day) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder by day & interval
+data3_1$day <- factor(data3_1$day, c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
+#datainterval <- factor(data1$interval,c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=20, fig.width=8}
+data3_1 %>%
+  ungroup() %>%
+  arrange(avg_entry) %>%
+  mutate(lines = reorder(lines, avg_entry)) %>%
+  ggplot(aes(y = avg_entry, x = lines)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Line") + facet_wrap(~ day) + coord_flip()
+```
+
+```{r fig.height=20, fig.width=8}
+data3_1 %>%
+  ungroup() %>%
+  arrange(avg_exit) %>%
+  mutate(lines = reorder(lines, avg_entry)) %>%
+  ggplot(aes(y = avg_exit, x = lines)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Line") + facet_wrap(~ day) + coord_flip()
+```
+
+### 3-2.Average by line & interval
+```{r}
+data3_2 <- turnstile %>% select(interval, lines, entry_volume, exit_volume)   %>% group_by(lines, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder by day & interval
+data3_2$interval <- factor(data3_2$interval,c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=20, fig.width=8}
+data3_2 %>%
+  ungroup() %>%
+  arrange(avg_entry) %>%
+  mutate(lines = reorder(lines, avg_entry)) %>%
+  ggplot(aes(y = avg_entry, x = lines)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Line") + facet_wrap(~ interval) + coord_flip()
+```
+
+```{r fig.height=20, fig.width=8}
+data3_2 %>%
+  ungroup() %>%
+  arrange(avg_exit) %>%
+  mutate(lines = reorder(lines, avg_entry)) %>%
+  ggplot(aes(y = avg_exit, x = lines)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Line") + facet_wrap(~ interval) + coord_flip()
+```
+
+### 4.Average by station & interval
+```{r}
+data4_1 <- turnstile %>% select(interval, station, station_id, entry_volume, exit_volume)   %>% mutate(station_unique = paste(station, station_id)) %>% group_by(station_unique, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder by day & interval
+data4_1$interval <- factor(data4_1$interval,c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=20, fig.width=8}
+data4_1 %>%
+  ungroup() %>%
+  arrange(avg_entry) %>%
+  mutate(station_unique = reorder(station_unique, avg_entry)) %>%
+  ggplot(aes(y = avg_entry, x = station_unique)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Station") + facet_wrap(~ interval) + coord_flip()
+```
+
+```{r fig.height=20, fig.width=8}
+data4_1 %>%
+  ungroup() %>%
+  arrange(avg_exit) %>%
+  mutate(station_unique = reorder(station_unique, avg_entry)) %>%
+  ggplot(aes(y = avg_exit, x = station_unique)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Station") + facet_wrap(~ interval) + coord_flip()
+```

@@ -158,6 +158,35 @@ data3 %>%
 * Note that there are two Grand central stations in above graph. Since when we are preprocessing the subway data with longitude and latitude information, we gave the unique station id for entrances that are one or more blocks away.
 * Even though the counts for Grand Central station is seperated into parts, it is ranked as the most crowed station.
 
+# Take this David
+```{r}
+data0 <- turnstile %>% select(day, is_holiday, entry_volume, exit_volume) %>% group_by(day, is_holiday)
+
+# Change the value of "day" to "Weekday" or "Weekend"
+day_list = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+for (i in day_list){
+  if (i != "Saturday" & i != "Sunday"){
+    data0[,"day"] <- data.frame(lapply(data0[,"day"], function(x) {gsub(i, "Weekday", x)}))
+  }
+  else {
+    data0[,"day"] <- data.frame(lapply(data0[,"day"], function(x) {gsub(i, "Weekend", x)}))
+  }
+}
+
+data0 <- data0 %>% ungroup() %>% mutate(day = if_else(day == "Weekday" & is_holiday == "False", "Weekday", "Weekend"))
+
+data0 <- data0 %>% group_by(day) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+```
+
+```{r}
+ggplot(data0, aes(y = avg_entry, x = day)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Day")  + coord_flip()
+```
+
+```{r}
+ggplot(data0, aes(y = avg_exit, x = day)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Day")  + coord_flip()
+```
 
 
 ### 4.2 Static illustration of crime, weather (rainfall) and subway traffic data

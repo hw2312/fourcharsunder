@@ -1,0 +1,137 @@
+---
+title: "EDAV Final Project"
+author: FourCharUnder
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,
+                      message = FALSE)
+```
+
+### Static illustration of turnstile data
+First of all, we explored subway turnstile data with static analysis.
+
+```{r}
+library(tidyverse)
+# read data
+turnstile = read.csv("2015_manhattan_turnstile_usage.csv")
+```
+
+#### 1.Average by day of week
+* First of all, we would see how the average number of entry & exit changes over time of a day, faceted by day of week. Variables, "day" & "interval", are releveled by the order of time so that we can easily catch the trend along with time.
+* The main feature detected through following plots is that the peak time for entry is between "4pm - 8pm" and the peak time for exit is between "8am - 12pm".
+* The insights we can get from that feature is that people are coming into Manhattan from outside of Manhattan between "8am - 12pm", which is the peak time of exit. Also, lots of people are going out from Manhattan  between "4pm - 8pm", which is the peak time of entry.
+
+```{r}
+# GroupBy 1.day & 2.interval --> average entry & exit volume
+data1 <- turnstile %>% select(interval, day, entry_volume, exit_volume)   %>% group_by(day, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder by day & interval
+data1$day <- factor(data1$day, c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
+data1$interval <- factor(data1$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=8, fig.width=8}
+ggplot(data1, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+```{r fig.height=8, fig.width=8}
+ggplot(data1, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+#### 2.The effect of weekday & weekend
+* In the second part of static analysis of subway data, we are exploring to see how the trend of subway usage changes by weekday and weekend. 
+* In 2-1, we are looking at the general trend of subway entry & exit over a week. Then, in 2-2, we will see the difference between weekday and weekend. 
+
+#### 2-1.Average by all
+* To see the subway usage trend over a week, we grouped data by interval without considering day of week and averaged count of entry and exit by corresponding interval of time. Again, to see the changes in entry and exit over time, we releveled variable "interval" in an order of time.
+* As we saw in part 1, the peak time for exit is between "8am - 12pm" and the peak time for the entry is between "4pm - 8pm" and the entry, which correnspond to the time people coming into Manhattan for their work and going back to home ater work.
+
+```{r}
+# GroupBy interval --> average entry & exit volume
+data2_1 <- turnstile %>% select(interval, entry_volume, exit_volume)   %>% group_by(interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder interval
+data2_1$interval <- factor(data2_1$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=5, fig.width=8}
+ggplot(data2_1, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Interval") + coord_flip()
+```
+
+```{r fig.height=5, fig.width=8}
+ggplot(data2_1, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval")  + coord_flip()
+```
+
+#### 2-2.Average by weekday vs weekend & holiday
+* We further explore our data to see the difference in trend of using subway on Weekdays and Weekends.
+* For variable "day", value of "Monday - Friday" were substituted with "Weekday", given it's not a holiday. If it is a holiday, "Saturday" or "Sunday", then we substituted it with "Weekend".
+* We grouped data by "Weekday" and "Weekend" to caculate the average number of entry and exit over interval.
+* We faceted graphs by "Weekday" and "Weekend".
+* The first interesting observation we made here is the difference in the number of subway usage during weekday and weekend. During weekdays, the average number of both entry and exit of subway is significantly higher than that of Weekends. Since there are lots of travelers in Manhattan over the year, we expected there would be some difference in trend but not in the count of subway usage. However, following plots show that there is actually a huge gap between subway usage count during weekdays and weekends.
+* For the second observation, trends in subway usage is changing from weekdays to weekends. As we observed in the previous parts, peak time for subway exit and enty is corresponding to the time people going to work and coming back home. However, during the weekend, there is no such trends anymore. The peak time for both entry and exit is between "12pm - 4pm". It is possibly because that people are not going to their work during weekends and the pattern from people who are commuting from outside of Manhattan is less reflected on data for weekend tims.
+* There is another interesting observation from the exit graph. During weekdays, there are lots of people exiting subway between "4am - 8am" but much less number of people are exiting subway during weekend around that time. This is possibly because that there are lots of people going to the office in early morning during weekdays.
+
+```{r}
+# GroupBy 1.day & 2.interval --> average entry & exit volume
+turnstile$is_holiday <- as.character(turnstile$is_holiday)
+data2_2 <- turnstile %>% select(interval, day, is_holiday, entry_volume, exit_volume)   %>% group_by(day, is_holiday, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+
+# Change the value of "day" to "Weekday" or "Weekend"
+day_list = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+for (i in day_list){
+  if (i != "Saturday" & i != "Sunday"){
+    data2_2[,"day"] <- data.frame(lapply(data2_2[,"day"], function(x) {gsub(i, "Weekday", x)}))
+  }
+  else {
+    data2_2[,"day"] <- data.frame(lapply(data2_2[,"day"], function(x) {gsub(i, "Weekend", x)}))
+  }
+}
+
+data2_2 <- data2_2 %>% ungroup() %>% mutate(day = if_else(day == "Weekday" & is_holiday == "False", "Weekday", "Weekend"))
+
+data2_2 <- data2_2 %>% group_by(day, interval) %>% summarise(avg_entry = mean(avg_entry), avg_exit = mean(avg_exit))
+
+data2_2$interval <- factor(data2_2$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=3, fig.width=8}
+ggplot(data2_2, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+```{r fig.height=3, fig.width=8}
+ggplot(data2_2, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#0072B2', fill='#E69F00')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) + coord_flip()
+```
+
+#### 3.Average by station & interval
+* For people who are stranger in Manhattan and hate crowed place, we've have the top 5 crowed stations that you should avoid in terms of exit and entry.
+* Following graphs show that "Grand Central", "Herald Square", "Union Square", "Port Authority" and "Time Square" are the most crowded stations in Manhattan.
+* Note that there is two Grand central station in following graph. Since when we are preprocessing the subway data with longitude and latitude information, we gave the unique station id for entrances that are one or more blocks away.
+* Even though the counts for Grand Central station is seperated into parts, it is ranked as the most crowed station.
+
+```{r}
+data3 <- turnstile %>% select(station, station_id, entry_volume, exit_volume)  %>% mutate(station_unique = paste(station, station_id)) %>% group_by(station_unique) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+```
+
+```{r}
+data3 %>%
+  ungroup() %>%
+  arrange(avg_entry) %>%
+  mutate(station_unique = reorder(station_unique, avg_entry)) %>% tail(5) %>%
+  ggplot(aes(y = avg_entry, x = station_unique)) + 
+  geom_col(col='#0072B2', fill="#66CC99")  + ylab("Entry Count") + xlab("Station")  + coord_flip()
+```
+
+```{r}
+data3 %>%
+  ungroup() %>%
+  arrange(avg_exit) %>%
+  mutate(station_unique = reorder(station_unique, avg_exit)) %>% tail(5) %>%
+  ggplot(aes(y = avg_exit, x = station_unique)) + 
+  geom_col(col='#0072B2', fill="#E69F00")  + ylab("Exit Count") + xlab("Station")  + coord_flip()
+```

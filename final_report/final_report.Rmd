@@ -1,0 +1,708 @@
+---
+title: "EDAV Final Project"
+author: FourCharUnder (tc2777,dk2983,spl2133,hw2312)
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,
+                      message = FALSE)
+library(tidyverse)
+library(extracat)
+library(png)
+library(grid)
+library(stringr)
+```
+
+### 1. Introduction
+
+Did you know that in the island of Manhattan:
+
+  1. 42nd St Grand Central Station (lines 4,5,6,7,S) has the highest single-station passenger entries, at around 9 thousand people per hour?
+  2. If you want to enjoy a subway ride without the presence of a crowd, your best bet would be between midnight and 4AM before the dawn of Monday?
+  3. The 23rd St (line 6) station in Kips Bay had the highest number of subway crime incidents in 2015, while Columbia University (line 1) had one of the lowest?
+  
+As the bloodline of the city that touches nearly all souls who reside in New York, the MTA subway system is filled with interesting facts. For our final EDAV project, we wanted to take a detailed look at select facets of the NYC subway, to teach New Yorkers insights, such as the above, that may have gone overlooked amidst the hustle and bustle of straphanging.
+
+To keep the scope of our report focused, we chose to specifically examine Manhattan subway stations, around which the highest number of New Yorkers live, and analyze data around the following topics:
+
+  1. How passenger traffic volumes differ across time, and geography
+  2. Whether there are relationships between subway passenger traffic, subway crime incidents, and the weather
+  3. How yellow taxi pickup volumes compare to subway passenger entries, postulating that the cab is a possible substitute to the subway
+
+We’ve also limited the year of our analysis to 2015 data, as that was the year when data was available for all subjects (subway, taxi traffic, crime) we wanted to study as a collection.
+
+In the ensuing executive summary section, we will be highlighting select findings that we deemed to be most revealing. We will then provide more details about the data we’ve used, the pre-processing and cleaning steps involved, as well as outline the comprehensive exploratory process we’ve taken to obtain our insights.
+
+Here are our group members and respective main contributions:
+
+_4 Char & Under_ (our highly-optimized last names all fit within four character spaces)
+
+  - Tae Young **Choi**: Cleaned and mapped Yellow Taxi pickup data to nearest neighbor subway stations, built interactive map visualization for taxi pickups
+  - DongGu **Kim**: Cleaned subway station GPS coordinates data, produced static visualizations for subway passenger traffic across times of day
+  - Sing Pou **Lee**: Cleaned NOAA weather and crime data, produced static visualizations for uncovering relationships between subway traffic vs. crime, and traffic vs. weather events
+  - David **Woo**: Cleaned subway turnstile volume data, built Mapbox-powered web app for interactive map visualizations, authored executive summary section
+
+(Each group member gave equal contribution to the project, and overcame various inherent challenges in the tasks that are not all mentioned in the description above)
+
+**Executive Summary**
+
+As regular users of the notoriously overcrowded New York subway system, we may wonder: In Manhattan, when is the busiest time in the subway, and where does it get most busy? To answer these types of questions, we decided to infer subway traffic data from entry and exit tallies captured by turnstile machines maintained by the MTA (cumulative counts of entry and exit volumes captured at different points in time).
+
+[All statements herein reflect “average” cases, meaning there are variations within]
+
+**Overview of Entry and Exit Volumes**
+
+  - Overall, across all days of the year (weekdays or non-holidays, weekends or holidays), the highest number of passenger entries take place between the hours of 4PM and 8PM, which includes the evening rush hour.
+  - The highest number of passenger exits in Manhattan, however, occur during the morning rush hour, between 8AM and 12PM.
+  - Low points, for both entry and exit volume, occur between midnight and 4AM.
+
+```{r fig.width=12, fig.height=5,echo=FALSE,fig.align='center'}
+img_entry_time <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry_time.png")),interpolate=FALSE)
+img_exit_time <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/exit_time.png")),interpolate=FALSE)
+
+gridExtra::grid.arrange(img_entry_time,img_exit_time,ncol=2)
+```
+
+**Days of the week**
+
+  - Across days of the week (e.g. Monday, Tuesday, etc.), Manhattan stations receive the highest volume of entering passengers on Wednesday between 4PM and 8PM.
+  - The highest time for exiting passengers is also on Wednesday, but between 8AM and 12PM
+
+```{r fig.width=16, fig.height=8,echo=FALSE,fig.align='center'}
+img_entry_dow <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry_dow.png")),interpolate=FALSE)
+img_exit_dow <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/exit_dow.png")),interpolate=FALSE)
+
+gridExtra::grid.arrange(img_entry_dow,img_exit_dow,ncol=2)
+```
+
+**Weekday vs. Weekends**
+
+  - While overall entry and exit volumes go down over the weekends (defined as Saturday and Sunday)  by “INSERT QUANTIFICATION”, night-time intervals such as 12AM-4AM and 8PM-12AM experience an uptick with the arrival of the weekend by “INSERT QUANTIFICATION”
+
+```{r fig.width=12, fig.height=5,echo=FALSE,fig.align='center'}
+img_entry <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry.png")),interpolate=FALSE)
+img_exit <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/exit.png")),interpolate=FALSE)
+
+gridExtra::grid.arrange(img_entry,img_exit,ncol=2)
+```
+```{r fig.width=12, fig.height=10,echo=FALSE,fig.align='center'}
+img_entry_ww <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekday_vs_weekend_entry.png")),interpolate=FALSE)
+img_exit_ww <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekday_vs_weekend_exit.png")),interpolate=FALSE)
+
+gridExtra::grid.arrange(img_entry_ww,img_exit_ww,nrow=2)
+```
+
+**Crowded areas**
+
+  - By station, Grand Central Terminal Station on the 4, 5, 6, 7, and the Times Square shuttle trains on average see the highest number of entries (note that the GCT subway station complex consists of two stops in our dataset).   - In second place, the 34th St - Herald Square stations on the B, D, F, M, N, Q, R, and W lines.
+
+```{r fig.width=14, fig.height=5,echo=FALSE,fig.align='center'}
+img_entry_top5 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/top_5_stations_entry.png")),interpolate=FALSE)
+img_exit_top5 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/top_5_stations_exit.png")),interpolate=FALSE)
+
+gridExtra::grid.arrange(img_entry_top5,img_exit_top5,ncol=2)
+```
+
+**Insert externality - rainy days**
+
+Another interesting question, is whether New Yorkers are deterred by rain or snow from using the subway. The anticipation of overcrowded subway trains is already discouraging, but what if there was extra humidity, and an added crowd of wet umbrellas?
+
+  - When we look at precipitation and subway traffic in tandem, there does seem to be an inverse (though not strong) relationship between the two, with the effect of rain as deterrence becoming more pronounced over the weekends.
+
+```{r fig.width=8, fig.height=10,echo=FALSE,fig.align='center'}
+img_rain_wkd <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekday_rain.png")),interpolate=FALSE)
+img_rain_wkn <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekend_rain.png")),interpolate=FALSE)
+
+gridExtra::grid.arrange(img_rain_wkd,img_rain_wkn,nrow=2)
+```
+
+**Crime in the subway system**
+
+As watchful city dwellers, we may also wonder about how safe the subway is. By looking at crime incidents reported by subway station along with subway traffic, we uncovered insights about safety such as the following:
+
+  - Generally speaking, the busier the station, the higher the number of crime incidents.
+
+```{r fig.width=8, fig.height=5,echo=FALSE,fig.align='center'}
+img_crime <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/traffic_crime_scatter.png")),interpolate=FALSE)
+gridExtra::grid.arrange(img_crime)
+```
+
+  - The 23rd st station on the 6 line and 125th st station on the 2 and 3 lines were particularly high in crime, for the overall passenger traffic seen.
+
+```{r fig.width=8, fig.height=5,echo=FALSE,fig.align='center'}
+img_crime_station <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/traffic_crime_scatter_station.png")),interpolate=FALSE)
+gridExtra::grid.arrange(img_crime_station)
+```
+
+**The Subway vs. Yellow Taxi Cabs**
+
+And thankfully, subways are not the only way around the city. One other, albeit more expensive, mode of transportation is the Yellow Taxi. With maps, we also wanted to see if the geographical distribution of pickups were correlated with that of subway entry and exit volumes.
+
+In turns out, there were two large takeaways:
+  - The more obvious: busy areas in the city (midtown and downtown) had both higher usages of the subway and yellow taxi. Often volume in these “prime” areas would outstrip their counterparts in upper Manhattan by orders of 5 to 6 times.
+  - The more interesting: for times later at night, the proportion of taxi rides taken to subway usage begins to increase, indicating a growing preference toward Yellow cabs over subway trains when getting around after dusk.
+
+```{r fig.width=8, fig.height=5,echo=FALSE,fig.align='center'}
+img_taxi <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/taxi_to_subway.png")),interpolate=FALSE)
+gridExtra::grid.arrange(img_taxi)
+```
+
+**Map-based passenger volume analysis**
+
+Using maps, we learned more about the geographic distribution of subway traffic volumes, such as the following:
+
+  - Stations in midtown (the approximate area between 30th and 5th to 50th and 8th) are consistently see the highest number of entering and exiting passengers throughout the day. Note these are screenshots taken from an interactive map for viewing subway traffic by time interval of day and type of day, available via the following [link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/traffic_map_viz/mapbox.html).
+
+```{r fig.width=12, fig.height=24,echo=FALSE,fig.align='center'}
+img_mapbox1 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/mapbox_entry_exit_volume.png")),interpolate=FALSE)
+gridExtra::grid.arrange(img_mapbox1)
+```
+
+### 2. Main Analysis (Exploratory Data Analysis)
+
+Here's a detailed account of our exploratory process. First, we started exploring the subway turnstile data on its own, before looking at its relationships with other variables that we were interested in (i.e., crime, weather, taxi).
+
+#### 2.1 Static illustration of turnstile data
+
+```{r}
+# read data
+turnstile = read.csv("data/subway/2015_manhattan_turnstile_usage.csv")
+```
+
+##### 2.1.1 Average by day of week
+
+First of all, we wanted to see how traffic in terms of entry and exit changed over different times of the day and week. To do this, we took averages of entry and exit traffic for four-hour intervals, faceted by day of week. With bar graphs, we were immediately able to spot some clear peaks and troughs for each category. The peak time interval for entry traffic was between 4pm and 8pm for weekdays, and between 12pm and 4pm for the weekend. Peak times for exit was between 8am and 12pm on weekdays, and also between 12pm and 4pm the weekend. The lowest point for both entry and exit was between midnight and 4am. 
+
+We suspect that this difference in entry and exit peak times may come from interborough traffic, such  as an uplift in morning exits from an influx of passengers originating outside Manhattan, and an uplift in evening rush hour entries from passengers travelling to the outer boroughs. The low tide over 12am-4am, on the other hand, may be explained by a general decrease in human activity in the city. We've highlighted these findings also in the executive summary section.
+
+```{r}
+# GroupBy 1.day & 2.interval --> average entry & exit volume
+data1 <- turnstile %>% select(interval, day, entry_volume, exit_volume)   %>% group_by(day, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+# Reoreder by day & interval
+data1$day <- factor(data1$day, c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
+data1$interval <- factor(data1$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=8, fig.width=8}
+ggplot(data1, aes(y = avg_entry, x = interval)) + 
+  geom_bar(stat = "identity", col='#8c8c8c', fill="#f28b6f") + ylab("Entry Count") + xlab("Interval") +
+  theme(axis.text.x=element_text(angle = -45, hjust = 0.2)) + facet_wrap(~ day) 
+```
+
+```{r fig.height=8, fig.width=8}
+ggplot(data1, aes(y = avg_exit, x = interval)) + 
+  geom_bar(stat = "identity", col='#8c8c8c', fill='#456d9b')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) +
+  theme(axis.text.x=element_text(angle = -45, hjust = 0.2)) + facet_wrap(~ day) 
+```
+
+
+##### 2.1.2 Traffic on weekday vs. weekend or holiday
+
+Next, we wanted to hone in on how much subway usage changed depending on whether it was the weekday, or whether it was on a weekend/holiday. Using a python package called "holidays" to programmatically identify traffic over US holidays, we've taken overall averages of entry and exit volume by four-hour time intervals, faceting on a weekday/weekend boolean. For our analysis, we've categorized Monday through Friday as weekdays, and Saturday, Sunday, and any US holidays as the weekend. 
+
+```{r}
+# GroupBy 1.day & 2.interval --> average entry & exit volume
+turnstile$is_holiday <- as.character(turnstile$is_holiday)
+data2_2 <- turnstile %>% select(interval, day, is_holiday, entry_volume, exit_volume)   %>% group_by(day, is_holiday, interval)
+
+# Change the value of "day" to "Weekday" or "Weekend"
+day_list = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+for (i in day_list){
+  if (i != "Saturday" & i != "Sunday"){
+    data2_2[,"day"] <- data.frame(lapply(data2_2[,"day"], function(x) {gsub(i, "Weekday", x)}))
+  }
+  else {
+    data2_2[,"day"] <- data.frame(lapply(data2_2[,"day"], function(x) {gsub(i, "Weekend", x)}))
+  }
+}
+
+data2_2 <- data2_2 %>% ungroup() %>% mutate(day = if_else(day == "Weekday" & is_holiday == "False", "Weekday", "Weekend"))
+
+data2_2 <- data2_2 %>% group_by(day, interval) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+
+data2_2$interval <- factor(data2_2$interval, c("08PM-12AM","04PM-08PM","12PM-04PM","08AM-12PM","04AM-08AM","12AM-04AM"))
+```
+
+```{r fig.height=5, fig.width=8}
+ggplot(data2_2, aes(y = avg_entry, x = interval)) + 
+  geom_col(col='#8c8c8c', fill="#f28b6f")  + ylab("Entry Count") + xlab("Interval") + facet_wrap(~ day) +
+  theme(axis.text.x=element_text(angle = -45, hjust = 0.2)) + facet_wrap(~ day) 
+```
+
+The first interesting observation we made in the charts above and below was the sheer contrast between weekdays and the weekend. During weekdays, the average number of both entry and exit of subway was significantly higher than those of weekends. Since there are lots of visiting travelers in Manhattan over the year, we expected weekends to also have a similar if not smaller volume as weekdays. However, most time intervals see a fair amount of dip over the weekends (in some cases around a 50% reduction, such as with 8am-12pm exits).
+
+```{r fig.height=5, fig.width=8}
+ggplot(data2_2, aes(y = avg_exit, x = interval)) + 
+  geom_col(col='#8c8c8c', fill='#456d9b')  + ylab("Exit Count") + xlab("Interval") + facet_wrap(~ day) + 
+  theme(axis.text.x=element_text(angle = -45, hjust = 0.2)) + facet_wrap(~ day) 
+```
+
+One perhaps interesting exception to this weekend-low rule is for passenger traffic over late night periods. For volumes between midnight and 4am, or between 8pm and midnight, weekends actually see an increase in both average entry and exit volumes. New York, a city we know to not sleep, seems to be more up late when there's no work at 9am the next day.
+
+##### 2.1.3 Looking at views by station
+
+Now adding location of traffic as a dimension, we were curious about which stations had the worst crowd volumes, and looked at the top 5 stations by both average entry and exit volumes per four hour interval. Top on our list were Grand Central Terminal, 34th St Herald Square, 14th St Union Square, 42nd St Port Authority, and 42nd St Time Square. 
+
+```{r}
+data3 <- turnstile %>% select(station, station_id, entry_volume, exit_volume, lines)  %>% mutate(station_unique = paste(station, lines, sep = "; ")) %>% group_by(station_unique) %>% summarise(avg_entry = mean(entry_volume), avg_exit = mean(exit_volume))
+```
+
+```{r fig.height=5, fig.width=12}
+station_plot1 <- data3 %>%
+  ungroup() %>%
+  arrange(avg_entry) %>%
+  mutate(station_unique = reorder(station_unique, avg_entry)) %>% tail(5) %>%
+  ggplot(aes(y = avg_entry, x = station_unique)) + 
+  geom_col(col='#8c8c8c', fill="#f28b6f")  + ylab("Entry Count") + xlab("Station; Lines") + 
+  scale_x_discrete(labels = function(station_unique) str_wrap(station_unique, width = 10)) + coord_flip()
+
+station_plot2 <- data3 %>%
+  ungroup() %>%
+  arrange(avg_exit) %>%
+  mutate(station_unique = reorder(station_unique, avg_exit)) %>% tail(5) %>%
+  ggplot(aes(y = avg_exit, x = station_unique)) + 
+  geom_col(col='#8c8c8c', fill="#456d9b")  + ylab("Exit Count") + xlab("Station; Lines")  +
+  scale_x_discrete(labels = function(station_unique) str_wrap(station_unique, width = 10)) + coord_flip()
+
+gridExtra::grid.arrange(station_plot1,station_plot2,ncol=2)
+```
+
+You'll note that we have two Grand Central stations. This comes from a decision we made while preprocessing MTA's turnstile data. As there were multiple collection points per station in the dataset, we've consolidated entry and exit volumes when they belonged to stations of the same name and identical set of servicing lines, *except* when there were clusters of entraces that were more than 1 avenue apart from each other (we confirmed these on a map). This is also why 42nd St Port Authority and Times Square stations are separated, even though there is a transfer passageway between the two, making them arguably "one" station.
+
+#### 2.2 Static illustration of crime, weather (precipitation) and subway traffic data
+
+Now that we have looked at subway human traffic data on its own, we moved on to explore its relationship with some other asepcts of city life, such as crime (those committed in subway stations) and the weather (rain/snow precipitation).
+
+First, we looked crime volumes alone, to find out which subway stations were the most dangerous in 2015. The crime dataset we used had three categories of crime - felony, misdemeanor, and violation. In case you are unfamiliar with what they are, here are some examples for each:
+
+  - Felony: Assaulting a police officer, robbery
+  - Misdemeanor: Larceny, lewdness in public
+  - Violation: Marijuana Possession, harassment
+
+##### 2.2.1 Bar charts of crime numbers against subway stations
+
+```{r, fig.height=5, fig.width=8, message=FALSE,echo=FALSE,fig.align='center'}
+subway_crime <- read_csv("data/crime/subway_crime_manhattan.csv")
+crime_group_station <- subway_crime %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n())
+crime_group_station_top <- subway_crime %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n()) %>% arrange(desc(crime_count)) %>% head(5)
+crime_group_station_bottom <- subway_crime %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n()) %>% arrange(desc(crime_count)) %>% tail(10)
+
+crime_group_station_crime_type <- subway_crime %>% group_by(Station_Name_w_Line, LAW_CAT_CD) %>% summarize(crime_count = n())
+
+crime_group_station_crime_type <- crime_group_station_crime_type %>% arrange(desc(crime_count))
+crime_group_station_felony <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "FELONY")
+crime_group_station_misdemeanor <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+crime_group_station_violation <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "VIOLATION")
+
+crime_group_station_felony_top <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "FELONY") %>% arrange(desc(crime_count)) %>% head(5)
+crime_group_station_misdemeanor_top <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "MISDEMEANOR")  %>% arrange(desc(crime_count)) %>% head(5)
+crime_group_station_violation_top <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "VIOLATION") %>% arrange(desc(crime_count)) %>% head(5)
+
+crime_group_station_felony_bottom <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "FELONY") %>% arrange(desc(crime_count)) %>% tail(10)
+crime_group_station_misdemeanor_bottom <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "MISDEMEANOR")  %>% arrange(desc(crime_count)) %>% tail(10)
+crime_group_station_violation_bottom <- crime_group_station_crime_type %>% filter(LAW_CAT_CD == "VIOLATION") %>% arrange(desc(crime_count)) %>% tail(10)
+
+# Plot bar charts for the top stations (most crimes)
+
+fig1.1 <- ggplot(crime_group_station_top, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) +
+  geom_col(fill = "pink") + ggtitle('Top Crime Count by Manhattan Subway Stations') + coord_flip() +
+  xlab("Subway Station") + ylab("Crime Count")  + 
+  scale_x_discrete(labels = function(Station_Name_w_Line) str_wrap(Station_Name_w_Line, width = 10))
+fig1.1
+```
+
+```{r, fig.height=5, fig.width=14, message=FALSE,echo=FALSE,fig.align='center'}
+fig1.2 <- ggplot(crime_group_station_felony_top, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + 
+  geom_col(fill = "pink") + coord_flip() + ggtitle('Top 5 Stations (Felony)') + 
+  xlab("Station") + ylab("Crime Incidents")  + 
+  scale_x_discrete(labels = function(Station_Name_w_Line) str_wrap(Station_Name_w_Line, width = 10))
+
+fig1.3 <- ggplot(crime_group_station_misdemeanor_top, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + 
+  geom_col(fill = "pink") + coord_flip() + ggtitle('Top 5 Stations (Misdemeanor)') + 
+  xlab("Station") + ylab("Crime Incidents") + 
+  scale_x_discrete(labels = function(Station_Name_w_Line) str_wrap(Station_Name_w_Line, width = 10))
+
+fig1.4 <- ggplot(crime_group_station_violation_top, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + 
+  geom_col(fill = "pink") + coord_flip() + ggtitle('Top 5 Stations (Violation)') +
+  xlab("Station") + ylab("Crime Incidents") + 
+  scale_x_discrete(labels = function(Station_Name_w_Line) str_wrap(Station_Name_w_Line, width = 10))
+
+gridExtra::grid.arrange(fig1.2,fig1.3,fig1.4,ncol=3)
+```
+By looking at these bar charts displaying the top 5 stations in terms of crime count, we see that the crime count by station for the 3 different crime types were closely related.  For example, 125 ST (line 4, 5, 6) and 23 ST were in the top 5 for all 3 types of crime.
+
+Out of interest, we also looked at the 10 "safest" stations.  The patterns are a little harder to infer compared with the most dangerous stations because there are many ties. Some interesting observations include: wall street station is one of the safest, whether we are looking at felony or misdemeanor.  Side note: while not in the list for top 10 safest, 116th St Columbia University had the least number of reported cases of misdemeanors. 
+
+```{r,fig.height=5, fig.width=8,echo=FALSE,fig.align='center'}
+# Plot bar charts for the bottom stations (least crimes)
+fig1.5 <- ggplot(crime_group_station_bottom, aes(x = reorder(Station_Name_w_Line, crime_count), y = crime_count)) + 
+  geom_col(fill = "pink") + ggtitle('Lowest Crime Count by Manhattan Subway Stations') + coord_flip() + 
+  xlab("Station") + ylab("Crime Incidents")
+fig1.5
+```
+
+##### 2.2.2 Box plots of crime numbers by time of the day
+
+We also wanted to see whether the distribution of crime incidents differed throughout various times of the day, and from that perhaps know learn when would be the "riskiest" time to take the subway. For this, we used boxplots on each time interval, showing the distribution of crime counts reported from each station.
+
+```{r, fig.height=10, fig.width=8,echo=FALSE,fig.align='center'}
+crime_group_station_time_interval <- subway_crime %>% group_by(Station_Name_w_Line, hour_interval) %>% summarize(crime_count = n())
+crime_group_station_crime_type_time_interval <- subway_crime %>% group_by(Station_Name_w_Line, hour_interval, LAW_CAT_CD) %>% summarize(crime_count = n())
+
+time_levels = c("2000-0000","1600-2000","1200-1600","0800-1200","0400-0800","0000-0400")
+
+crime_group_station_time_interval$hour_interval <- factor(crime_group_station_time_interval$hour_interval, levels = time_levels)
+
+crime_group_station_crime_type_time_interval$hour_interval <- factor(crime_group_station_crime_type_time_interval$hour_interval, levels = time_levels)
+
+crime_group_station_felony_time_interval <- crime_group_station_crime_type_time_interval%>% filter(LAW_CAT_CD == "FELONY")
+crime_group_station_misdemeanor_time_interval <- crime_group_station_crime_type_time_interval%>% filter(LAW_CAT_CD == "MISDEMEANOR")
+crime_group_station_violation_time_interval <- crime_group_station_crime_type_time_interval%>% filter(LAW_CAT_CD == "VIOLATION")
+
+fig2.1 <- ggplot(crime_group_station_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + 
+  ggtitle('Crime Count by Time Period of the Day') + xlab("Time Interval") + ylab("Crime Count")
+fig2.2 <- ggplot(crime_group_station_time_interval, aes(hour_interval, crime_count)) + geom_boxplot(outlier.colour="red") + coord_flip() + 
+  ggtitle('Crime Count by Time with Station name overlay') + xlab("Time Interval") + ylab("Crime Count") + 
+  geom_text(label=crime_group_station_time_interval$Station_Name_w_Line, check_overlap = TRUE, nudge_x=0.2, nudge_y=-0.3, size = 3) 
+
+gridExtra::grid.arrange(fig2.1,fig2.2,nrow=2)
+```
+
+For overall crime count, the median was rather consistent across the time periods.  The number of crimes committed was highest from 1600-2000hr, which coincided with the evening peak period.  Based on that, we expected the morning peak (0800-1200hr) to display the next highest crime count, but the data did not support that.  Instead, 1200-1600hr showed the second highest crime count based on median.  Also, variance (as indicated by length of the box) was highest for the time periods with the highest median crime count.
+
+##### 2.2.3 Scatter plots of Subway Human Traffic against Crime Count (by weekend, weekday; by crime type)
+
+We also wanted to explore relationships between subway crime incidents and passenger traffic volumes. After all, we postulated that either larger crowds were more attractive grounds for getting away with petty crimes, such as pick-pocketing, or crowded subways increased the chances of anyone committing crimes against each other (we're half-joking with the latter). For this, we deployed scatter plots, with total daily passenger traffic (total entries on the turnstile as an approximation for overall crowdedness) on the x-axis, and total subway crime incidents by day on the y-axis. To isolate any effects that weekday vs weekend/holidays might have on the relationship between passenger traffic and crime volumes, we also plotted weekdays and weekends separately.
+
+**One point represents totals on a day in the year 2015**
+
+```{r, fig.height=15, fig.width=12,echo=FALSE,fig.align='center'}
+crime_count_date <- subway_crime %>% group_by(CMPLNT_FR_DT) %>% summarize(crime_count = n())
+crime_type_count_date <- subway_crime %>% group_by(CMPLNT_FR_DT, LAW_CAT_CD) %>% summarize(crime_count = n())
+
+subway_traffic <- read_csv("data/subway/2015_manhattan_turnstile_usage2.csv")
+subway_total_traffic <- subway_traffic %>% mutate(total_vol = entry_volume)
+subway_total_traffic_wkday <- subway_total_traffic %>% filter(day_of_week %in% c(0, 1, 2, 3, 4) & is_holiday == "False")
+subway_total_traffic_wkend <- subway_total_traffic %>% filter(day_of_week %in% c(5, 6) | is_holiday == "True")
+subway_total_traffic_wkday_day <- subway_total_traffic_wkday %>% group_by(date) %>% summarize(traffic = sum(total_vol))
+subway_total_traffic_wkend_day <- subway_total_traffic_wkend %>% group_by(date) %>% summarize(traffic = sum(total_vol))
+
+crime_count_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_count_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, crime_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_type_count_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, crime_type_count_date, c("date" = "CMPLNT_FR_DT"))
+crime_type_count_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, crime_type_count_date, c("date" = "CMPLNT_FR_DT"))
+
+felony_count_traffic_wkday <- crime_type_count_traffic_wkday %>% filter(LAW_CAT_CD == "FELONY")
+misdemeanor_count_traffic_wkday <- crime_type_count_traffic_wkday %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+violation_count_traffic_wkday <- crime_type_count_traffic_wkday %>% filter(LAW_CAT_CD == "VIOLATION")
+felony_count_traffic_wkend <- crime_type_count_traffic_wkend %>% filter(LAW_CAT_CD == "FELONY")
+misdemeanor_count_traffic_wkend <- crime_type_count_traffic_wkend %>% filter(LAW_CAT_CD == "MISDEMEANOR")
+violation_count_traffic_wkend <- crime_type_count_traffic_wkend %>% filter(LAW_CAT_CD == "VIOLATION")
+
+fig3.1 <- ggplot(crime_count_traffic_wkday, aes(x = traffic, y = crime_count)) + geom_point(color='blue') + 
+    ggtitle('Weekday Subway Human Traffic vs. Crime Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.2 <- ggplot(crime_count_traffic_wkend, aes(x = traffic, y = crime_count)) + geom_point(color='blue') + 
+    ggtitle('Weekend Subway Human Traffic vs. Crime Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.3 <- ggplot(felony_count_traffic_wkday, aes(x = traffic, y = crime_count)) + geom_point(color='#592f99') + 
+    ggtitle('Weekday Subway Human Traffic vs. Felony Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.4 <- ggplot(felony_count_traffic_wkend, aes(x = traffic, y = crime_count)) + geom_point(color='#592f99') + 
+    ggtitle('Weekend Subway Human Traffic vs. Felony Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.5 <- ggplot(misdemeanor_count_traffic_wkday, aes(x = traffic, y = crime_count)) + geom_point(color='#2b4877') + 
+    ggtitle('Weekday Subway Human Traffic vs. Misdemeanor Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.6 <- ggplot(misdemeanor_count_traffic_wkend, aes(x = traffic, y = crime_count)) + geom_point(color='#2b4877') + 
+    ggtitle('Weekend Subway Human Traffic vs. Misdemeanor Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.7 <- ggplot(violation_count_traffic_wkday, aes(x = traffic, y = crime_count)) + geom_point(color='#2f7599') + 
+    ggtitle('Weekday Subway Human Traffic vs. Violation Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+fig3.8 <- ggplot(violation_count_traffic_wkend, aes(x = traffic, y = crime_count)) + geom_point(color='#2f7599') + 
+    ggtitle('Weekend Subway Human Traffic vs. Violation Count') + 
+    xlab("Passenger Traffic") + ylab("Crime Count") + stat_smooth(method = "lm", col = "red")
+
+gridExtra::grid.arrange(fig3.1,fig3.2,fig3.3,fig3.4,fig3.5,fig3.6,fig3.7,fig3.8,nrow=4,ncol=2)
+```
+
+Overall, there was a positive correlation between human traffic and crime count for both weekday and weekend. A similar pattern was observed for felony and misdemeanor. However, due to the small sample sizes, we weren't able to infer a clear relationship for violation types.
+
+##### 2.2.4 Scatter plots of Subway Human Traffic against Inclement Weather Events (by weekend, weekday)
+
+We supposed that weather events, such as rain/snow precipitation, may have an effect on subway passenger traffic. With larger portions of the city's workforce being able to work remotely from home, we wondered if inclement weather would deter people from going to work, thought we admit this is only possible for certain white-collar workers equipped with advanced technological infrastructure. 
+
+**One point represents totals on a day in the year 2015**
+
+```{r, fig.height=5, fig.width=12,echo=FALSE,fig.align='center'}
+rainfall <- read_csv("data/weather/precipitation.csv")
+rainfall_day <- rainfall %>% group_by(date) %>% summarize(total_rainfall = sum(total_precip))
+
+rainfall_traffic_wkday <- inner_join(subway_total_traffic_wkday_day, rainfall_day)
+rainfall_traffic_wkend <- inner_join(subway_total_traffic_wkend_day, rainfall_day)
+
+fig4.1 <- ggplot(rainfall_traffic_wkday, aes(x = total_rainfall, y = traffic)) + geom_point(color='blue') +
+  ggtitle('Weekday Subway Human Traffic against Precipitation') + xlab("Precipitation (inches)") + ylab("Human Traffic Count") + 
+  stat_smooth(method = "lm", col = "red")
+
+fig4.2 <- ggplot(rainfall_traffic_wkend, aes(x = total_rainfall, y = traffic)) + geom_point(color='blue') +
+  ggtitle('Weekend Subway Human Traffic against Precipitation') + xlab("Precipitation (inches)") + ylab("Human Traffic Count") + 
+  stat_smooth(method = "lm", col = "red")
+
+gridExtra::grid.arrange(fig4.1,fig4.2,ncol=2)
+```
+
+For weekdays, we saw that human traffic was not much influenced by rainfall, which was not surprising because everyone had to go to work/school regardless of whether or not it was raining. For weekends, we saw a stronger negative relationship between rainfall and human traffic, which made sense because people might cancel their outdoor activities or leisure travelling plans depending on the weather.
+
+We also saw that most of the data points were clustered around the y-axis, which was due to the fact that on most days there were no rain.  On that note, we had to highlight here that the relationship that we saw here would be very susceptible to outlier effect, i.e., the regression slope that was plotted on the above graph may shift significantly if there was another outlier that, for instance, represented a day with higher rainfall and higher traffic.
+
+##### 2.2.4 Scatter plots of Crime Count against Subway Human Traffic (by crime type; by weekend, weekday)
+
+We also wanted to see the relationship between crime incidents and subway passenger traffic broken out by each station. For this set of scatter plots, we instead aggregated across time and let each point represent a unique subway station. The focus here was to investigate if a subway station with higher traffic also suffered from higher crime rate. To make station name labels easier to read, we've plotted two identical copies - one with, and the other without station names.
+
+**One data point = one subway station**
+
+```{r, fig.height=5, fig.width=12,echo=FALSE,fig.align='center'}
+wkday <- subway_total_traffic %>% filter(day_of_week %in% c(0, 1, 2, 3, 4) & is_holiday == "False") %>% select(date)
+wkend <- subway_total_traffic %>% filter(day_of_week %in% c(5, 6) | is_holiday == "True") %>% select(date)
+subway_crime_wkday <- right_join(subway_crime, wkday, c("CMPLNT_FR_DT" = "date"))
+subway_crime_wkend <- right_join(subway_crime, wkend, c("CMPLNT_FR_DT" = "date"))
+crime_group_station_wkday <- subway_crime_wkday %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n())
+crime_group_station_wkend <- subway_crime_wkend %>% group_by(Station_Name_w_Line) %>% summarize(crime_count = n())
+
+station_total_traffic <- subway_total_traffic %>% group_by(Station_Name_w_Line) %>% summarise(total_traffic = sum(total_vol))
+station_total_traffic_wkday <- subway_total_traffic_wkday %>% group_by(Station_Name_w_Line) %>% summarise(total_traffic = sum(total_vol))
+station_total_traffic_wkend <- subway_total_traffic_wkend %>% group_by(Station_Name_w_Line) %>% summarise(total_traffic = sum(total_vol))
+
+station_traffic_crime <- inner_join(station_total_traffic, crime_group_station)
+
+station_traffic_crime_wkday <- inner_join(station_total_traffic_wkday, crime_group_station_wkday)
+station_traffic_crime_wkend <- inner_join(station_total_traffic, crime_group_station_wkend)
+
+fig6.1 <- ggplot(station_traffic_crime, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + 
+    ggtitle('Crime Count vs Passenger Traffic') + xlab("Passenger Traffic") + ylab("Crime Count") + 
+    stat_smooth(method = "lm", col = "red")
+
+fig6.2 <- ggplot(station_traffic_crime, aes(x = total_traffic, y = crime_count)) + geom_point(color='blue') + 
+    ggtitle('Crime Count vs Passenger Traffic with Station Names') + xlab("Passenger Traffic") + ylab("Crime Count") + 
+    stat_smooth(method = "lm", col = "red") + geom_text(label=station_traffic_crime$Station_Name_w_Line, check_overlap = TRUE, nudge_y = 0.2, size =3.3) 
+
+gridExtra::grid.arrange(fig6.1,fig6.2,ncol=2)
+
+```
+
+We noticed a general trend of higher crime count for stations with higher human traffic, and this was true regardless of weekday or weekend, or crime type. There were two outliers with lower traffic but very high crime count (23 ST on line 6 and 125 ST on line 4, 5 & 6), which meant that for these two stations, their higher crime rate could not be well explained by human traffic alone. Other factors affecting crime rate could be whether or not that neighborhood tended to have higher crime rate.  Also, lower traffic could also work in the reverse, as a station that is more isolated may attract more potential offenders, since their crimes could be more easily committed unseen.
+
+
+##### 2.2.5 Time Series of Crime Count across time
+
+Last on crime, we wondered whether there were certain times during the year when subway crime incidents occurred more frequently than others. In other words, we wondered if crime was subject to seasonality. To answer this question, we plotted daily total crime incident reports across time, one for all days, and two looking at weekdays and weekend/holidays separately, to see if fluctuations in volume were due to the type of day. 
+
+```{r, fig.height=5, fig.width=8, echo=FALSE,fig.align='center'}
+fig7.1 <- ggplot(crime_count_date, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + 
+  ggtitle("Crime Count across Time") + xlab("Time") + ylab("Crime Count") + 
+  geom_smooth(method = "loess", span = .5, se = FALSE)
+
+wkday <- unique(wkday)
+wkend <- unique(wkend)
+crime_count_date_wkday <- right_join(crime_count_date, wkday, c("CMPLNT_FR_DT" = "date"))
+crime_count_date_wkend <- right_join(crime_count_date, wkend, c("CMPLNT_FR_DT" = "date"))
+
+fig7.1
+```
+
+```{r, fig.height=5, fig.width=12,echo=FALSE,fig.align='center'}
+fig7.2 <- ggplot(crime_count_date_wkday, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + 
+    ggtitle("Crime Count across Time (Weekdays)") + xlab("Time") + ylab("Crime Count") + 
+    geom_smooth(method = "loess", span = .5, se = FALSE)
+
+fig7.3 <- ggplot(crime_count_date_wkend, aes(CMPLNT_FR_DT, y=crime_count)) + geom_line() + 
+    ggtitle("Crime Count across Time (Weekends)") + xlab("Time") + ylab("Crime Count") + 
+    geom_smooth(method = "loess", span = .5, se = FALSE)
+
+gridExtra::grid.arrange(fig7.2,fig7.3,ncol=2)
+```
+
+Ignoring the fluctuations that didn't seem to disappear even when separating for weekday vs. weekend/holidays, it seemed that subway crime rates were lower near the start and end of the year with two slight peaks between Apr and Jun, where there were upticks of daily crimes to the 30s, rather than the rolling average of mid teens.
+
+#### 2.3 Subway Riders vs. Taxi Riders
+
+To explore the relationship between subway and taxi ridership, we first plotted the number of subway entries against taxi pick-ups by time of the day. Assuming the total number of people use subway or taxi is constant, we inferred that the slopes in the below graph represent people's preferences between the two modes of transportation. With taxi ridership on the x-axis and subway ridership on the y-axis, a flatter slope meant a higher preference for taxis over the subway. On average, it turned out that for 2015, people used the taxi more often during the morning rush hour (4 am - 8 am) than the evening rush hour (4 pm - 8 pm). We can see that people prefer taxis when they have to get to places on time. 
+
+```{r, echo=FALSE, fig.align='center'}
+entry = read.csv("data/subway/subway_taxi_entry.csv")
+data1 <- entry %>% select(hour, entry_volume, exit_volume)
+data1$hour = factor(data1$hour)
+levels(data1$hour)[levels(data1$hour)=="0"] <- "08PM-12AM"
+levels(data1$hour)[levels(data1$hour)=="4"] <- "12AM-04AM"
+levels(data1$hour)[levels(data1$hour)=="8"] <- "04AM-08AM"
+levels(data1$hour)[levels(data1$hour)=="12"] <- "08AM-12PM"
+levels(data1$hour)[levels(data1$hour)=="16"] <- "12PM-04PM"
+levels(data1$hour)[levels(data1$hour)=="20"] <- "04PM-08PM"
+
+data1$hour = factor(data1$hour, c("12AM-04AM", "04AM-08AM", "08AM-12PM", "12PM-04PM", "04PM-08PM", "08PM-12AM"))
+ggplot(data1, aes(y = entry_volume, x = exit_volume)) + geom_point(aes(colour = factor(hour)), size = 1)  + ylab("Subway Count") + xlab("Taxi Count") + ggtitle("Subway Entries against Taxi Pick-ups")  + facet_wrap(~ hour)  + stat_smooth(method = "lm", col = "red", size=.5)
+```
+
+Similarly, we've also plotted number of subway exits against taxi drop-offs by time of the day. Overall, the differences between entries and exits were not apparent, except for morning times. The exit/drop-off pair plot had steeper lines in the morning.
+
+```{r, echo=FALSE, fig.align='center'}
+exit = read.csv("data/subway/subway_taxi_exit.csv")
+data2 <- exit %>% select(hour, entry_volume, exit_volume)
+data2$hour = factor(data2$hour)
+levels(data2$hour)[levels(data2$hour)=="0"] <- "08PM-12AM"
+levels(data2$hour)[levels(data2$hour)=="4"] <- "12AM-04AM"
+levels(data2$hour)[levels(data2$hour)=="8"] <- "04AM-08AM"
+levels(data2$hour)[levels(data2$hour)=="12"] <- "08AM-12PM"
+levels(data2$hour)[levels(data2$hour)=="16"] <- "12PM-04PM"
+levels(data2$hour)[levels(data2$hour)=="20"] <- "04PM-08PM"
+
+data2$hour = factor(data2$hour, c("12AM-04AM", "04AM-08AM", "08AM-12PM", "12PM-04PM", "04PM-08PM", "08PM-12AM"))
+ggplot(data2, aes(y = entry_volume, x = exit_volume)) + geom_point(aes(colour = factor(hour)), size = 1)  + ylab("Subway Count") + xlab("Taxi Count") + ggtitle("Subway Exits against Taxi Drop-offs") + facet_wrap(~ hour)  + stat_smooth(method = "lm", col = "red", size=.5)
+```
+
+By combining observations together, we concluded that Manhattan residents tended to use the taxi more often than commuters from outside of Mahattan in the morning and vice versa in the evening. It was also interesting to note that the slopes for entries and exists were almost identical during 12PM-4PM and 8PM-12AM. This told us that during these time periods, people equally use taxi and subway to get to places within Mahattan area.
+
+### 3. Data Pre-processing process - description of data and analysis of data quality
+
+#### 3.1 NYC Subway Turnstile Data
+
+We obtained subway [turnstile data](https://data.ny.gov/Transportation/Turnstile-Usage-Data-2015/ug6q-shqc/data), as well as GPS [coordinates data](https://data.ny.gov/Transportation/NYC-Transit-Subway-Entrance-And-Exit-Data-API/rwat-jhj8) of subway stations from the New York State' Open's data.ny.gov.
+
+The entire sequence of data pre-processing performed on the turnstile data was done via Python. The iPython notebooks used for this step are available on GitHub: 
+https://github.com/hw2312/fourcharsunder/blob/master/data/code/CoordsManhattanStations.ipynb
+https://github.com/hw2312/fourcharsunder/blob/master/data/code/TurnstileUsageManhattan.ipynb
+
+
+##### 3.1.1 Quality Issue with Turnstile Data - inconsistency in "timestamp"
+
+As we were attempting to analyze intra-day passenger traffic patterns, we quickly ran into a problem. Timestamps for each recorded entry and exit volume were provided at scattered times throughout the day, making it difficult to cleanly aggregate by time as provided in the original dataset. To illustrate the distribution of timestamps in the dataset, we've plotted below a sample of 100 timestamps, out of ~85,000 total unique timestamps. As lengths between times were typically around 3 to 4 hours, we decided that the most granular level of aggregation that least sacrified accuracy was entry/exit volumes on 4-hour intervals, starting at midnight. This way, there were only 6 intervals that could cleanly display intra-day passenger traffic patterns.
+
+```{r}
+unique_time = read.csv("data/subway/unique_time.csv")
+unique_time_sample <- unique_time[sample(1:nrow(unique_time), 50, replace=FALSE),]
+```
+
+```{r fig.height=5, fig.width=8,fig.align='center'}
+ggplot(unique_time_sample, aes(y = Count, x = Time)) + 
+  geom_col(col='#8c8c8c', fill='#456d9b')  + ylab("Count") + xlab("TimeStamp") +
+  theme(axis.text.x=element_text(angle = -45, hjust = 0.2)) + ggtitle("Sample distribution of entry/exit volume timestamps")
+```
+
+##### 3.1.2 Quality Issue with Turnstile Data - inconsistency in "cumulative count of entry and exit"
+
+Another challenge with the turnstile dataset, was that it provided cumulative counts of passenger entries and exits, rather than absolute volumes at different times. These were seemingly numbers from turnstile counters that were captured at different times throughout the day. We thus had to infer passenger traffic by calculating rolling differences between consecutive entry and exit counts on each turnstile device.
+
+When computing these rolling differences, we ran into some negative entry/exit volumes (theoretically impossible), as well as exorbitanly high entry/exit volumes. We explained these with the following possibilities:
+
+  - Some turnstiles showed entry/exit counts going up in reverse choronological order
+  - Some turnstiles seemed to reset their counters, which resulted in a steep drop in the turnstile counters
+  
+To "smooth" these issues out, we've opted to convert all negative entry/exit volumes into positive values (assuming that the reverse records were pure mistakes), and to drop all values that are above the 0.9999 quantile (which is around 3000/4hr/device, or around 13 entry or exits per min per device).
+
+##### 3.1.3 Quality Issue with Turnstile Usage Data - inconsistency in "station names"
+
+In order to allow map-based visualizations of subway traffic, we needed to map GPS coordinates to the turnstile data. In doing so, one of our main challenges was that turnstile volumes and station GPS coordinate values came from two separate data sources, and had different naming conventions for stations (e.g. one abbreviated "Avenue" as "AV", while the other used "AVE"). To deal with these issues, we attempted to join as many turnstile data points to GPS coordinates via use of regular expressions in the clean-up code, and geographically mapped all Manhattan stations to consolidate any same station that had different name values (e.g. Delancey/Essex St stations marked as one Delancey and another Essex). For stations serviced by lines of different colors (e.g. blue A/C & orange B/D, but not A/C/E as a set alone), we defined stations to be the "same" when they were connected by a transfer passageway, but only if they were within one avenue. Using this one-avenue criteria, we consolidated turnstile volumes for stations such as 14th St (A/C/E) and 8th Avenue (L), but not 42nd St PABT (A/C/E) and 42nd St Times Square (1/2/3/7/N/Q/R/S/W).
+  
+  
+#### 3.2 Crime Data
+
+Crime data was collected from the [Open Data portal](https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i) provided by the city of New York.
+
+The original data set comprised 5.58M rows with 24 cols.  The oldest case happened on Jan 1, 1948 and the most recent case in the dataset was on Dec, 31, 2016.
+
+The entire sequence of data pre-processing performed on the crime data was done on Python and the iPython notebook is available at: 
+https://github.com/hw2312/fourcharsunder/blob/master/crime/crime.ipynb
+
+Below provides a summary:
+
+##### 3.2.1 Sample size, issues with date/time, location values
+
+As the most recent taxi data was for year 2015, we also limited our crime data to incidents reported in 2015. After filtering for only 2015 crimes committed at Manhattan subway stations, we had around 5,367 incidents. The date and time of the data set was provided as strings, so we converted it to date and time types, and bucketed each row into the same 4-hour intervals used for aggregating subway passenger traffic volumes. For location, as the crime dataset provided dealt with incidents that were not only subway-related, it only provided lat/long GPS coordinates, without explicitly locating the subway station at which it was committed. To map each crime incident to a subway station, we wrote a program that assigned each incident to its nearest subway station, based on lat/long differences. 170 of the 5,367 (1.3%) filtered records had null lat/long values - we removed these records from our analysis.
+
+##### 3.2.2 Breadth of available attributes
+
+Being almost too detailed and comprehensive for high-level analysis, the dataset had 24 columns, many of them unnecessary for drawing a rough relationship between crime and passenger traffic volume.  For instance, we did not need to know the date and time at which the crime was reported.  We were interested in the date/time at which the crime was *committed* and this information was available in the dataset.  We were also not interested in the codes used for each crime type which were for the police department's internal reference.  We were interested in the type of crime expressed in a language familiar to the lay person.  For that, the dataset conveniently included a column to indicate which of 3 categories the crime committed was in: felony, misdemeanor, violation.  There were also other columns giving a detailed description of the crime but for the purpose of faceting and grouping, we felt that these information was too granular and we did not include them.  
+
+In the end, we kept 12 columns the highlights of which included: crime commmited date, time, lat/long, crime category.
+
+#### 3.3 Weather Data
+
+Weather data was collected from the [National Centers for Environmental Information (NOAA)](https://www.ncdc.noaa.gov/cdo-web/datatools/lcd)
+
+While there was only one weather station for selection in Manhattan, Central Park, since large variations in weather conditions would be unlikely for different locations in Manhattan, we deemed one station as sufficient.
+
+The weather dataset contained quite a rich set of weather-related data (13,329 rows and 90 columns for 2015), such as humidity, average wind speed, monthly minimum temperature, hourly sky conditions. For this dataset, we decided to focus only on precipitation as an indicator of inclement weather, to be used when analyzing the weather's relationship with subway passenger traffic.
+
+The entire sequence of data pre-processing performed on the weather data was done on Python and the iPython notebook is available at: 
+https://github.com/hw2312/fourcharsunder/blob/master/weather/weather_new.ipynb
+
+Below provides a summary:
+
+##### 3.3.1 Date/time conversion, attribute reduction
+
+Similar to what we did for crime data, we converted the date and time from string type to date and time format. Likewise, we inserted an additional column in this weather dataset to indicate which 4 hourly  window the weather recording was made in. As mentioned earlier, there were 90 columns in the dataset and many of these columns were not related to precipitation and necessary for our analysis. We opted to reduce the dataset to 3 columns, all of which were engineered features.  We explain the feature engineering below.
+
+##### 3.3.2 Clean up  precipitation readings
+
+There were several columns representing precipitation, but we focused only on the one giving hourly precipitation (i.e., the highest time resolution). For hourly precipitation, there were readings with "T" for value instead of a numerical value. "T" represented "trace", meaning a very small amount of precipitation which were too small for the instrument to provide an accurate reading.  For these readings, we replaced them with 0. 1,761 out of 13,329 readings were null (13%) - we replaced them also with 0.
+
+There were also hourly readings appended with the character 's' to indicate that these were estimated readings.  For the purpose of our project, we did not have to differentiate between estimated and actual measured precipitation.  Therefore, we removed this information.
+
+Below graphic provides a quick visual snapshot of proportion of missing values in hourly precipitation readings.
+
+```{r}
+raw_weather <- read.csv("data/weather/weather_data_raw.csv") %>% 
+  select(STATION, DATE, HOURLYPrecip)
+
+raw_weather[raw_weather==""] <- NA
+visna(raw_weather, sort = "b")
+```
+
+##### 3.3.4 Aggregate precipitation readings
+
+To be consistent with the entire project, we were interested in data on 4-hour windows.  The hourly precipitation data had to be converted to a similar format to facilitate our analysis.  Therefore, we aggregated the precipitation readings within each 4 hourly window to get the total precipitation measured within that window.
+
+As mentioned earlier, we transformed this weather dataset into 3 columns: they are date, 4hourly time interval and total precipitation (within that 4hourly time interval).
+
+#### 3.4 Taxi Data
+
+Taxi data was also collected from the [Open Data portal](https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u) provided by the city of New York.
+
+2015 Yellow Taxi Trip data includes all taxi trips completed in yellow taxis in New York from January to June in 2015. This dataset is collected by technology providers authorized under the Taxicab Passenger Enhancement Program and provided to the NYC Taxi and Limousine Commission. The recorded columns are pick-up and drop-off dates and locations, trip distances, payment methods, fares, etc. Due to the large size of the dataset (77.1 million rows), we decided to work with trips completed in February, as February had the most average daily trips, with approximately 443,000 trips per day. While we understand that February data won’t represent the entire dataset, for simplicity we excluded seasonality from our analysis.
+
+As for quality of data completeness, only 1.7% of the dataset had missing pick-up and drop-off locations.
+
+##### 3.4.1 Extracting only the relevant columns 
+
+We wanted to use GPS coordinates of pick-up and drop-off locations to visualize patterns between subway and taxi ridership. To find the closest subway station from taxi pick-up/drop-off locations, we calculated squared distances from pick-up/drop-off locations to all subway stations. We made a simple assumption that people could have taken the subway instead of taking a cab by using the closest subway stations. We filtered out the minimum distances for each taxi ride and mapped pick-up/drop-off locations to corresponding subway stations.
+
+#### 3.4.2 Group By Station ID, Date, Hour and aggregate row counts
+
+We transformed taxi data into the same structure as turnstile data by calculating row counts based on (Station ID, Date, Hour) pairs. These preprocess steps were done in Scala and Spark. As a result, we could compare taxi riders with subway riders based on different time of the day and days of the week.
+
+### 4. Interactive Maps
+
+We've created interactive maps for visualizing passenger entry and exit volumes by time of day and type of day (weekdays vs. weekends), as well as for comparing subway and taxi passenger volumes. We've designed them as choropleth maps with equal-area square bins. Each of these 1 sq. kilometer areas were shaded based on their average values (e.g. average entry, exit, or taxi dropoff), with darker shades indicating higher values. While at first we intended on using hexagonal bins, we weren't able to implement it using Mapbox's built-in functions. All links to the maps (HTML files) are listed below:
+
+NOTE: Mapbox's servers often get delayed, which may fail to load the interactive map at once. Please try refreshing the page at least once or twice before jumping to deduct points.
+
+  - Interactive map of subway passenger entry and exit traffic by time and type of day ([link](http://htmlpreview.github.io/?))
+  - Subway passenger entry volumes and taxi pick-ups ([link](http://htmlpreview.github.io/?))
+  - Subway passenger exit volumes and taxi drop-offs ([link](http://htmlpreview.github.io/?))
+
+**All above links are optimized for desktop browsers.**
+  
+### 5. Conclusion
+
+We started this project by asking ourselves what was the topic closest to our hearts what we were most curious about regarding that topic.  As in turned out, the NYC subway interested all of us immensely, it being the city's bloodline and an integral part of our daily lives. We started with certain answers in mind, but at the same time not entirely certain about what we would find, as we performed an exploratory analysis on NYC subway and related datasets.
+
+There were many findings that largely matched our collective and conventional wisdom. We reiterate here a highlight of some of such findings: Evening peak period (1600-2000hr) experienced the highest subway usage (based on turnstile data). Weekday subway usage was higher than the weekend. Precipitation amount was inversely related to subway traffic, but less so on weekdays. Volume of crime committed at subway stations was positively correlated with subway usage, regardless of whether we look at it aggregated across time for unique stations or aggregated across time for each day.
+
+If we were to further develop this study, we envision expanding the views to all five boroughs of New York City, implementing other methods of visualizing data on maps (e.g. aggregation by neighborhood, instead of equal-area bins), and studying relationships between subway passenger traffic with other aspects of city life, such as housing prices, and the concentration of Duane Reade locations (they're *literally* everywhere).
+
+Overall, we've also learned a lot about the importance of data pre-processing, while it is a time-consuming and unseen part of data projects. In our case, we took pains to ensure that the data we used for exploration was properly cleaned, so that we weren't putting garbage in for garbage out. We've also realized that data exploration is not a linear process. There was never a single right way or method for aggregating data and visualizing them, while there were also certain best practices to keep in mind (e.g., avoiding the use of shape or color if possible).
+
+And lastly, we learned to write down what we expected to see from our data but keep an open mind regarding the results.  Results that did not match our expectations turned out to be just as if not more rewarding than those that did, as it was still something new.

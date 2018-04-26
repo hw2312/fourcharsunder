@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
+}
+.map-container{
+  position: absolute;
+  top: 70px;
+  left: 10px;
+  margin: auto;
+  width: 100%
+}
+.map-container .map-element{
+  display: inline-block;
+}
+#mapRight {
+  margin-left: 10px
+}
+#console {
+  position: absolute;
+  top: 70px;
+  left: 5px;
+  width: 200px;
+  margin: 20px;
+  padding: 0px 15px;
+  background-color: lightgrey;
+}
+.session {
+  margin-bottom: 10px;
+}
+.row {
+  width: 100%;
+  margin:auto;
+}
+.colors {
+  margin-bottom: 5px;
+}
+table {
+  width: 100%;
+  border: 0px;
+  margin-bottom: 5px;
+}
+table td {
+  width:13%;
+  display: inline-block;
+  height:20px;
+}
+table td.label{
+  font-size:8px;
+  word-wrap: break-word;
+  text-align: center;
+}
+table td.label2{
+  font-size:8px;
+  word-wrap: break-word;
+  text-align: center;
+  valign: bottom;
+}
+table td.cat{
+  font-size:12px;
+  text-align: center;
+  valign: bottom;
+}
+table td.label_header{
+  font-size:11px;
+  word-wrap: break-word;
+  text-align: center;
+}
+.rd-group .weekendSelect {
+  display: block;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.btn {
+  padding: 10px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  -webkit-transition-duration: 0.4s; /* Safari */
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+.btn-default{
+  background-color:#555555;
+  color:white;
+}
+.btn-default:hover{
+  background-color:#555555;
+  color:#efe997;
+}

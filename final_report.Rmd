@@ -556,8 +556,6 @@ Next, we looked at human traffic and crime count across time and there seemed to
 
 We further tried to look at rainfall with human traffic, and rainfall with crime rate, but these two graphs were dominated by large fluctuations in rainfall and were not informative.  It was clear to us that scatter plot offered a better way to visualize relationship between different variables especially if we did not believe that time was a major influencing factor for two parameters (e.g., crime and rainfall) in the same way. 
 
-### 4.3 Subway Riders vs. Taxi Riders
-
 ```{r, echo=FALSE}
 entry = read.csv("data/entry.csv")
 data1 <- entry %>% select(hour, entry_volume, exit_volume)
@@ -571,9 +569,10 @@ levels(data1$hour)[levels(data1$hour)=="20"] <- "04PM-08PM"
 
 data1$hour = factor(data1$hour, c("12AM-04AM", "04AM-08AM", "08AM-12PM", "12PM-04PM", "04PM-08PM", "08PM-12AM"))
 ggplot(data1, aes(y = entry_volume, x = exit_volume)) + geom_point(aes(colour = factor(hour)), size = 1)  + ylab("Subway Count") + xlab("Taxi Count") + ggtitle("Subway Entries against Taxi Pick-ups")  + facet_wrap(~ hour)  + stat_smooth(method = "lm", col = "red", size=.5)
+```
+This plot shows the number of subway entries against taxi pick-ups by time of the day. Assuming the total number of people use subway or taxi is constant, the slopes represent which mode of transportation people prefer. On average, people use taxi more often during morning rush hour (4 am - 8 am) than evening rush hour (4 pm - 8 pm). We can see that people prefer taxi when they have to get to places on time. 
 
-
-
+```{r, echo=FALSE}
 exit = read.csv("data/exit.csv")
 data2 <- exit %>% select(hour, entry_volume, exit_volume)
 data2$hour = factor(data2$hour)
@@ -588,7 +587,7 @@ data2$hour = factor(data2$hour, c("12AM-04AM", "04AM-08AM", "08AM-12PM", "12PM-0
 ggplot(data2, aes(y = entry_volume, x = exit_volume)) + geom_point(aes(colour = factor(hour)), size = 1)  + ylab("Subway Count") + xlab("Taxi Count") + ggtitle("Subway Exits against Taxi Drop-offs") + facet_wrap(~ hour)  + stat_smooth(method = "lm", col = "red", size=.5)
 ```
 
-#### 4.3.1 Analysis
+Similarly, this plot show the number of subway exits against taxi drop-offs by time of the day. Overall, the differences between entries and exits are not apparent except for morning times. This plot has steeper lines in the morning. By combining observations together, we can conclude that Manhattan residents tend to use taxi more often than commuters from outside of Mahattan in the morning and vice versa in the evening. It is also interesting to note that the slopes for entries and exists are almost identical during 12PM-4PM and 8PM-12AM. This tells us that during these time periods, people equally use taxi and subway to get to places within Mahattan area.
 
 ## 5. Data Pre-processing process - description of data and analysis of data quality
 

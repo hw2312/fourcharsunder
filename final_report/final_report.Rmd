@@ -572,8 +572,9 @@ By combining observations together, we concluded that Manhattan residents tended
 We obtained subway [turnstile data](https://data.ny.gov/Transportation/Turnstile-Usage-Data-2015/ug6q-shqc/data), as well as GPS [coordinates data](https://data.ny.gov/Transportation/NYC-Transit-Subway-Entrance-And-Exit-Data-API/rwat-jhj8) of subway stations from the New York State' Open's data.ny.gov.
 
 The entire sequence of data pre-processing performed on the turnstile data was done via Python. The iPython notebooks used for this step are available on GitHub: 
-https://github.com/hw2312/fourcharsunder/blob/master/data/code/CoordsManhattanStations.ipynb
-https://github.com/hw2312/fourcharsunder/blob/master/data/code/TurnstileUsageManhattan.ipynb
+
+  - https://github.com/hw2312/fourcharsunder/blob/master/final_report/data/subway/CoordsManhattanStations.ipynb
+  - https://github.com/hw2312/fourcharsunder/blob/master/final_report/data/subway/TurnstileUsageManhattan.ipynb
 
 
 ##### 3.1.1 Quality Issue with Turnstile Data - inconsistency in "timestamp"
@@ -689,9 +690,9 @@ We've created interactive maps for visualizing passenger entry and exit volumes 
 
 NOTE: Mapbox's servers often get delayed, which may fail to load the interactive map at once. Please try refreshing the page at least once or twice before jumping to deduct points.
 
-  - Interactive map of subway passenger entry and exit traffic by time and type of day ([link](http://htmlpreview.github.io/?))
-  - Subway passenger entry volumes and taxi pick-ups ([link](http://htmlpreview.github.io/?))
-  - Subway passenger exit volumes and taxi drop-offs ([link](http://htmlpreview.github.io/?))
+  - Interactive map of subway passenger entry and exit traffic by time and type of day ([link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/interactive_map/entry_exit_volume.html))
+  - Subway passenger entry volumes and taxi pick-ups ([link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/interactive_map/subway_taxi_entry.html))
+  - Subway passenger exit volumes and taxi drop-offs ([link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/interactive_map/subway_taxi_exit.html))
 
 **All above links are optimized for desktop browsers.**
   

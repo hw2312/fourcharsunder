@@ -556,6 +556,8 @@ Next, we looked at human traffic and crime count across time and there seemed to
 
 We further tried to look at rainfall with human traffic, and rainfall with crime rate, but these two graphs were dominated by large fluctuations in rainfall and were not informative.  It was clear to us that scatter plot offered a better way to visualize relationship between different variables especially if we did not believe that time was a major influencing factor for two parameters (e.g., crime and rainfall) in the same way. 
 
+### 4.3 Subway Riders vs. Taxi Riders
+
 ```{r, echo=FALSE}
 entry = read.csv("data/entry.csv")
 data1 <- entry %>% select(hour, entry_volume, exit_volume)

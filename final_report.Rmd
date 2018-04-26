@@ -27,7 +27,6 @@ library(tidyverse)
 turnstile = read.csv("data/2015_manhattan_turnstile_usage.csv")
 ```
 
-
 #### 4.1.1 Average by day of week
 
 ```{r}
@@ -605,7 +604,20 @@ https://github.com/hw2312/fourcharsunder/blob/master/data/code/TurnstileUsageMan
 
 #### 5.1.1 Quality Issue with Turnstile Usage Data - inconsistency in "timestamp"
 
-* We wanted to explore turnstile data with time of a day. However, the timestamp in the original turnstile data was inconsistant, which made it difficult to analyze the trend of subway usage over interval.
+```{r}
+unique_time = read.csv("data/unique_time.csv")
+unique_time_sample <- unique_time[sample(1:nrow(unique_time), 50, replace=FALSE),]
+```
+
+```{r fig.height=8, fig.width=8}
+ggplot(unique_time_sample, aes(y = Count, x = Time)) + 
+  geom_col(col='#8c8c8c', fill='#456d9b')  + ylab("Count") + xlab("TimeStamp") +
+  theme(axis.text.x=element_text(angle = -45, hjust = 0.2))
+```
+* To analyze how the values of timestamp are distributed more efficiently, we preprocessed the original data such that each row in TimeStamp column contain unique value of timestamp and each row in Count column has corresponding count of timestamp.
+* We generated the graph above is to show that we have numerous unique value of timestamp in our original data.
+* The plotted histogram above only with 100 sampled timestamp out of 85394 unique timestamps.
+* We wanted to explore turnstile data with time of a day. However, the timestamp in the original turnstile data had too many values, which made it difficult to analyze the trend of subway usage over interval.
 * To deal with this issue, we discretized timestamp values into 6 intervals by 4 hours (i.e., 12am - 4am).
 
 

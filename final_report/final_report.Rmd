@@ -78,7 +78,7 @@ gridExtra::grid.arrange(img_entry_dow,img_exit_dow,ncol=2)
 
 **Weekday vs. Weekends**
 
-  - While overall entry and exit volumes go down over the weekends (defined as Saturday and Sunday)  by “INSERT QUANTIFICATION”, night-time intervals such as 12AM-4AM and 8PM-12AM experience an uptick with the arrival of the weekend by “INSERT QUANTIFICATION”
+  - While overall entry and exit volumes go down over the weekends (defined as Saturday and Sunday), night-time intervals such as 12AM-4AM and 8PM-12AM experience an uptick with the arrival of the weekend.
 
 ```{r fig.width=12, fig.height=5,echo=FALSE,fig.align='center'}
 img_entry <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry.png")),interpolate=FALSE)

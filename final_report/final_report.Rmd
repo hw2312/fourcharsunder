@@ -58,8 +58,8 @@ As regular users of the notoriously overcrowded New York subway system, we may w
   - Low points, for both entry and exit volume, occur between midnight and 4AM.
 
 ```{r fig.width=12, fig.height=5,echo=FALSE,fig.align='center'}
-img_entry_time <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry_time.png")),interpolate=FALSE)
-img_exit_time <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/exit_time.png")),interpolate=FALSE)
+img_entry_time <- rasterGrob(as.raster(readPNG("images/entry_time.png")),interpolate=FALSE)
+img_exit_time <- rasterGrob(as.raster(readPNG("images/exit_time.png")),interpolate=FALSE)
 
 gridExtra::grid.arrange(img_entry_time,img_exit_time,ncol=2)
 ```
@@ -70,8 +70,8 @@ gridExtra::grid.arrange(img_entry_time,img_exit_time,ncol=2)
   - The highest time for exiting passengers is also on Wednesday, but between 8AM and 12PM
 
 ```{r fig.width=16, fig.height=8,echo=FALSE,fig.align='center'}
-img_entry_dow <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry_dow.png")),interpolate=FALSE)
-img_exit_dow <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/exit_dow.png")),interpolate=FALSE)
+img_entry_dow <- rasterGrob(as.raster(readPNG("images/entry_dow.png")),interpolate=FALSE)
+img_exit_dow <- rasterGrob(as.raster(readPNG("images/exit_dow.png")),interpolate=FALSE)
 
 gridExtra::grid.arrange(img_entry_dow,img_exit_dow,ncol=2)
 ```
@@ -81,14 +81,14 @@ gridExtra::grid.arrange(img_entry_dow,img_exit_dow,ncol=2)
   - While overall entry and exit volumes go down over the weekends (defined as Saturday and Sunday), night-time intervals such as 12AM-4AM and 8PM-12AM experience an uptick with the arrival of the weekend.
 
 ```{r fig.width=12, fig.height=5,echo=FALSE,fig.align='center'}
-img_entry <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/entry.png")),interpolate=FALSE)
-img_exit <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/exit.png")),interpolate=FALSE)
+img_entry <- rasterGrob(as.raster(readPNG("images/entry.png")),interpolate=FALSE)
+img_exit <- rasterGrob(as.raster(readPNG("images/exit.png")),interpolate=FALSE)
 
 gridExtra::grid.arrange(img_entry,img_exit,ncol=2)
 ```
 ```{r fig.width=12, fig.height=10,echo=FALSE,fig.align='center'}
-img_entry_ww <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekday_vs_weekend_entry.png")),interpolate=FALSE)
-img_exit_ww <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekday_vs_weekend_exit.png")),interpolate=FALSE)
+img_entry_ww <- rasterGrob(as.raster(readPNG("images/weekday_vs_weekend_entry.png")),interpolate=FALSE)
+img_exit_ww <- rasterGrob(as.raster(readPNG("images/weekday_vs_weekend_exit.png")),interpolate=FALSE)
 
 gridExtra::grid.arrange(img_entry_ww,img_exit_ww,nrow=2)
 ```
@@ -98,8 +98,8 @@ gridExtra::grid.arrange(img_entry_ww,img_exit_ww,nrow=2)
   - By station, Grand Central Terminal Station on the 4, 5, 6, 7, and the Times Square shuttle trains on average see the highest number of entries (note that the GCT subway station complex consists of two stops in our dataset).   - In second place, the 34th St - Herald Square stations on the B, D, F, M, N, Q, R, and W lines.
 
 ```{r fig.width=14, fig.height=5,echo=FALSE,fig.align='center'}
-img_entry_top5 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/top_5_stations_entry.png")),interpolate=FALSE)
-img_exit_top5 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/top_5_stations_exit.png")),interpolate=FALSE)
+img_entry_top5 <- rasterGrob(as.raster(readPNG("images/top_5_stations_entry.png")),interpolate=FALSE)
+img_exit_top5 <- rasterGrob(as.raster(readPNG("images/top_5_stations_exit.png")),interpolate=FALSE)
 
 gridExtra::grid.arrange(img_entry_top5,img_exit_top5,ncol=2)
 ```
@@ -111,8 +111,8 @@ Another interesting question, is whether New Yorkers are deterred by rain or sno
   - When we look at precipitation and subway traffic in tandem, there does seem to be an inverse (though not strong) relationship between the two, with the effect of rain as deterrence becoming more pronounced over the weekends.
 
 ```{r fig.width=8, fig.height=10,echo=FALSE,fig.align='center'}
-img_rain_wkd <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekday_rain.png")),interpolate=FALSE)
-img_rain_wkn <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/weekend_rain.png")),interpolate=FALSE)
+img_rain_wkd <- rasterGrob(as.raster(readPNG("images/weekday_rain.png")),interpolate=FALSE)
+img_rain_wkn <- rasterGrob(as.raster(readPNG("images/weekend_rain.png")),interpolate=FALSE)
 
 gridExtra::grid.arrange(img_rain_wkd,img_rain_wkn,nrow=2)
 ```
@@ -124,14 +124,14 @@ As watchful city dwellers, we may also wonder about how safe the subway is. By l
   - Generally speaking, the busier the station, the higher the number of crime incidents.
 
 ```{r fig.width=8, fig.height=5,echo=FALSE,fig.align='center'}
-img_crime <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/traffic_crime_scatter.png")),interpolate=FALSE)
+img_crime <- rasterGrob(as.raster(readPNG("images/traffic_crime_scatter.png")),interpolate=FALSE)
 gridExtra::grid.arrange(img_crime)
 ```
 
   - The 23rd st station on the 6 line and 125th st station on the 2 and 3 lines were particularly high in crime, for the overall passenger traffic seen.
 
 ```{r fig.width=8, fig.height=5,echo=FALSE,fig.align='center'}
-img_crime_station <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/traffic_crime_scatter_station.png")),interpolate=FALSE)
+img_crime_station <- rasterGrob(as.raster(readPNG("images/traffic_crime_scatter_station.png")),interpolate=FALSE)
 gridExtra::grid.arrange(img_crime_station)
 ```
 
@@ -144,7 +144,7 @@ In turns out, there were two large takeaways:
   - The more interesting: for times later at night, the proportion of taxi rides taken to subway usage begins to increase, indicating a growing preference toward Yellow cabs over subway trains when getting around after dusk.
 
 ```{r fig.width=8, fig.height=5,echo=FALSE,fig.align='center'}
-img_taxi <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/taxi_to_subway.png")),interpolate=FALSE)
+img_taxi <- rasterGrob(as.raster(readPNG("images/taxi_to_subway.png")),interpolate=FALSE)
 gridExtra::grid.arrange(img_taxi)
 ```
 
@@ -155,7 +155,7 @@ Using maps, we learned more about the geographic distribution of subway traffic 
   - Stations in midtown (the approximate area between 30th and 5th to 50th and 8th) are consistently see the highest number of entering and exiting passengers throughout the day. Note these are screenshots taken from an interactive map for viewing subway traffic by time interval of day and type of day, available via the following [link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/interactive_map/entry_exit_volume.html).
 
 ```{r fig.width=12, fig.height=24,echo=FALSE,fig.align='center'}
-img_mapbox1 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/mapbox_entry_exit_volume.png")),interpolate=FALSE)
+img_mapbox1 <- rasterGrob(as.raster(readPNG("images/mapbox_entry_exit_volume.png")),interpolate=FALSE)
 gridExtra::grid.arrange(img_mapbox1)
 ```
 

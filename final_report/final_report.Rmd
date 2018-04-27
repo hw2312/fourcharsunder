@@ -24,7 +24,7 @@ Did you know that in the island of Manhattan:
   
 As the bloodline of the city that touches nearly all souls who reside in New York, the MTA subway system is filled with interesting facts. For our final EDAV project, we wanted to take a detailed look at select facets of the NYC subway, to teach New Yorkers insights, such as the above, that may have gone overlooked amidst the hustle and bustle of straphanging.
 
-To keep the scope of our report focused, we chose to specifically examine Manhattan subway stations, around which the highest number of New Yorkers live, and analyze data around the following topics:
+To keep the scope of our report focused, we chose to specifically examine Manhattan subway stations, around which the highest number of New Yorkers work, play, and live, and analyze data around the following topics:
 
   1. How passenger traffic volumes differ across time, and geography
   2. Whether there are relationships between subway passenger traffic, subway crime incidents, and the weather
@@ -45,7 +45,7 @@ _4 Char & Under_ (our highly-optimized last names all fit within four character 
 
 (Each group member gave equal contribution to the project, and overcame various inherent challenges in the tasks that are not all mentioned in the description above)
 
-**Executive Summary**
+### Executive Summary
 
 As regular users of the notoriously overcrowded New York subway system, we may wonder: In Manhattan, when is the busiest time in the subway, and where does it get most busy? To answer these types of questions, we decided to infer subway traffic data from entry and exit tallies captured by turnstile machines maintained by the MTA (cumulative counts of entry and exit volumes captured at different points in time).
 
@@ -615,7 +615,7 @@ Crime data was collected from the [Open Data portal](https://data.cityofnewyork.
 The original data set comprised 5.58M rows with 24 cols.  The oldest case happened on Jan 1, 1948 and the most recent case in the dataset was on Dec, 31, 2016.
 
 The entire sequence of data pre-processing performed on the crime data was done on Python and the iPython notebook is available at: 
-https://github.com/hw2312/fourcharsunder/blob/master/crime/crime.ipynb
+https://github.com/hw2312/fourcharsunder/blob/master/final_report/data/crime/crime.ipynb
 
 Below provides a summary:
 
@@ -638,7 +638,7 @@ While there was only one weather station for selection in Manhattan, Central Par
 The weather dataset contained quite a rich set of weather-related data (13,329 rows and 90 columns for 2015), such as humidity, average wind speed, monthly minimum temperature, hourly sky conditions. For this dataset, we decided to focus only on precipitation as an indicator of inclement weather, to be used when analyzing the weather's relationship with subway passenger traffic.
 
 The entire sequence of data pre-processing performed on the weather data was done on Python and the iPython notebook is available at: 
-https://github.com/hw2312/fourcharsunder/blob/master/weather/weather_new.ipynb
+https://github.com/hw2312/fourcharsunder/blob/master/final_report/data/weather/weather_new.ipynb
 
 Below provides a summary:
 

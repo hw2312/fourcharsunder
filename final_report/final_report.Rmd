@@ -152,7 +152,7 @@ gridExtra::grid.arrange(img_taxi)
 
 Using maps, we learned more about the geographic distribution of subway traffic volumes, such as the following:
 
-  - Stations in midtown (the approximate area between 30th and 5th to 50th and 8th) are consistently see the highest number of entering and exiting passengers throughout the day. Note these are screenshots taken from an interactive map for viewing subway traffic by time interval of day and type of day, available via the following [link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/traffic_map_viz/mapbox.html).
+  - Stations in midtown (the approximate area between 30th and 5th to 50th and 8th) are consistently see the highest number of entering and exiting passengers throughout the day. Note these are screenshots taken from an interactive map for viewing subway traffic by time interval of day and type of day, available via the following [link](http://htmlpreview.github.io/?https://github.com/hw2312/fourcharsunder/blob/master/interactive_map/entry_exit_volume.html).
 
 ```{r fig.width=12, fig.height=24,echo=FALSE,fig.align='center'}
 img_mapbox1 <- rasterGrob(as.raster(readPNG("/Users/dwoo/dsi/EDAV final report images/mapbox_entry_exit_volume.png")),interpolate=FALSE)

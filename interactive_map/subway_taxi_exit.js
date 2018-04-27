@@ -1,36 +1,46 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3R5MDcwMyIsImEiOiJjamc4eGNjbWkwZmN4MzNxZWMyOXdzc3c5In0.TmogLdS4xqZwi3TOS5B9Gw';
 
-var breaks = Array.apply(null, Array(7)).map(function (_, i) {return i*20000;});
+var breaks = Array.apply(null, Array(7)).map(function (_, i) {return i*5000;});
+var breaks2 = Array.apply(null, Array(7)).map(function (_, i) {return i*30000;});
 
 // Set innerHTML volumes with rounded up values from breaks
 var labels = document.getElementsByClassName('label')
+var labels2 = document.getElementsByClassName('label2')
 
-var getTextLabel = function(v){
-  if (v < 1000){
-    return String(v)
-  }
-  else if(v < 1000000){
-    return String(Math.floor(v/1000))+"k"
-  }
-  else{
-    return String(Math.floor(v/1000000))+"m"
-  }
-};
 
-labels[0].innerHTML = "< " + getTextLabel(breaks[1])
+		var getTextLabel = function(v){
+			if (v < 1000){
+				return String(v)
+			}
+			else if(v < 1000000){
+				return String(Math.floor(v/1000))+"k"
+			}
+			else{
+				return String(Math.floor(v/1000000))+"m"
+			}
+		};
 
-for (var i = 1; i < labels.length-1; i++){
-  var value = breaks[i],
-      value_next = breaks[i+1]
+		labels[0].innerHTML = "< " + getTextLabel(breaks[1])
+		labels2[0].innerHTML = "< " + getTextLabel(breaks2[1])
 
-  var textString = getTextLabel(value),
-      textStringNext = getTextLabel(value_next)
+		for (var i = 1; i < labels.length-1; i++){
+			var value = breaks[i],
+					value_next = breaks[i+1]
+			var value2 = breaks2[i],
+					value_next2 = breaks2[i+1]
 
-  labels[i].innerHTML = textString+"-"+textStringNext
+			var textString = getTextLabel(value),
+					textStringNext = getTextLabel(value_next)
+			var textString2 = getTextLabel(value2),
+					textStringNext2 = getTextLabel(value_next2)
 
-}
-// Set last label
-labels[labels.length-1].innerHTML = getTextLabel(breaks[labels.length-1])+"+"
+			labels[i].innerHTML = textString+"-"+textStringNext
+			labels2[i].innerHTML = textString2+"-"+textStringNext2
+
+		}
+		// Set last label
+		labels[labels.length-1].innerHTML = getTextLabel(breaks[labels.length-1])+"+"
+		labels2[labels2.length-1].innerHTML = getTextLabel(breaks2[labels2.length-1])+"+"
 
 var map = new mapboxgl.Map({
   container: 'mapLeft',
